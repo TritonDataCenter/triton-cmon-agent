@@ -1,0 +1,5 @@
+{
+    "name": "cmon-agent",
+    "path": "/opt/smartdc/agents/etc/cmon-agent.config.json",
+    "post_cmd": "[[ $(svcs -Ho state cmon-agent) == 'online' ]] && /usr/sbin/svcadm restart cmon-agent || /usr/sbin/svcadm enable cmon-agent;"
+}

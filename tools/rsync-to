@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+#
+# Copyright 2017 Joyent, Inc.
+#
+
+#
+# Rsync cmon-agent
+#
+
+set -o errexit
+
+TOP=$(cd $(dirname $0)/../; pwd)
+NODE=root@$1
+AGENT_DIR=/opt/smartdc/agents/lib/node_modules/cmon-agent
+
+extraOpts=
+if [[ $(uname -s) != "SunOS" ]]; then
+    extraOpts="--exclude *.node --exclude build"
+fi
+
+rsync -av ${TOP}/ \
+    $NODE:${AGENT_DIR}/ \
+    $extraOpts \
+    --exclude .git/ \
+    --exclude /deps/ \
+    --exclude /docs/ \
+    --exclude /tools/ \
+    --exclude /tmp/
+
+state=$(ssh ${NODE} svcs -H -o state cmon-agent)
+if [[ "$state" == "maintenance" ]]; then
+    ssh ${NODE} svcadm clear cmon-agent
+else
+    ssh ${NODE} svcadm restart cmon-agent
+fi
+ssh ${NODE} svcadm restart config-agent

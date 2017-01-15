@@ -1,0 +1,37 @@
+{
+  "name": "cmon-agent",
+  "description": "Triton Container Monitor Agent",
+  "version": "1.0.0",
+  "author": "Joyent (joyent.com)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/joyent/triton-cmon-agent.git"
+  },
+  "private": true,
+  "dependencies": {
+    "assert-plus": "1.0.0",
+    "bunyan": "1.8.1",
+    "forkexec": "^1.1.0",
+    "kstat": "1.0.1",
+    "libuuid": "0.2.1",
+    "lru-cache": "4.0.1",
+    "prom-client": "3.4.6",
+    "restify": "4.1.1",
+    "sprintf-js": "1.0.3",
+    "vasync": "1.6.4"
+  },
+  "devDependencies": {
+    "tape": "4.2.2",
+    "eslint": "2.13.1",
+    "eslint-plugin-joyent": "1.0.1"
+  },
+  "sdcDependencies": {
+    "config-agent": "1.5.0"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/tap test/*.test.js",
+    "postinstall": "./npm/postinstall.sh",
+    "postuninstall": "./npm/postuninstall.sh"
+  },
+  "license": "MPL-2.0"
+}

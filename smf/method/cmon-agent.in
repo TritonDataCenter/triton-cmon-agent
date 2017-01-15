@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+#
+# Copyright (c) 2017, Joyent, Inc.
+#
+
+#
+# SMF Startup script for cmon-agent
+#
+
+set -o xtrace
+
+. /lib/svc/share/smf_include.sh
+. /lib/sdc/config.sh
+
+
+function setup_logadm {
+    mkdir -p -m 0755 /var/log/cmon-agent
+    logadm -w cmon_agent_logs -C 168 -S 1g -c -p 1h \
+        -t '/var/log/cmon-agent/cmon-agent_$nodename_%FT%H:%M:%S.log' \
+        /var/svc/log/*cmon-agent*.log
+
+    # Move the smf_logs entry to run last (after the entries we just added) so
+    # that the default '-C' (from
+    # https://github.com/joyent/smartos-live/blob/master/overlay/generic/etc/logadm.conf)
+    # doesn't defeat our attempts to rotate out of "/var/svc/log".
+    /usr/sbin/logadm -r smf_logs
+    /usr/sbin/logadm -w smf_logs -C 8 -c -s 1m '/var/svc/log/*.log'
+}
+
+
+case "$1" in
+'start')
+    setup_logadm
+    /usr/bin/ctrun -l child -o noorphan @@ROOT@@/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cmon-agent &
+    ;;
+
+'stop')
+    echo "'stop' not yet supported" >&2
+    exit $SMF_EXIT_ERR_FATAL
+    ;;
+
+*)
+    echo "Usage: $0 { start | stop }"
+    exit $SMF_EXIT_ERR_FATAL
+    ;;
+esac
+exit $SMF_EXIT_OK
