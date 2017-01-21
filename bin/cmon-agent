@@ -3,17 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 /*
  * Copyright (c) 2017, Joyent, Inc.
  */
-
 'use strict';
 
 var mod_assert = require('assert-plus');
 var mod_bunyan = require('bunyan');
 var mod_fs = require('fs');
-var mod_path = require('path');
 var mod_restify = require('restify');
 var mod_vasync = require('vasync');
 
@@ -22,6 +19,10 @@ var VError = require('verror').VError;
 var tritonConfig = require('../lib/triton-config');
 
 var CONFIG_PATH = '/opt/smartdc/agents/etc/cmon-agent.config.json';
+var DEFAULT_CONFIG = {
+    logLevel: 'debug',
+    port: 9163
+};
 
 var log = mod_bunyan.createLogger({
     name: 'cmon-agent',
@@ -33,7 +34,10 @@ function loadConfig(cb) {
 
     log.debug({CONFIG_PATH: CONFIG_PATH}, 'loadConfig');
     mod_fs.readFile(CONFIG_PATH, {encoding: 'utf8'}, function (err, data) {
-        if (err) {
+        if (err && err.code === 'ENOENT') {
+            log.error({confErr: err}, 'Config is missing, using defaults');
+            cb(null, DEFAULT_CONFIG);
+        } else if (err) {
             cb(err);
         } else {
             try {
@@ -46,50 +50,59 @@ function loadConfig(cb) {
 }
 
 function main() {
-    mod_vasync.pipeline({arg: {}, funcs: [
-        function getConfigAndSetupLogging(arg, next) {
-            loadConfig(function (err, config) {
-                if (err) {
-                    next(err);
-                    return;
-                }
+    mod_vasync.pipeline({
+        arg: {},
+        funcs: [
+            function getConfigAndSetupLogging(arg, next) {
+                loadConfig(function (err, config) {
+                    if (err) {
+                        next(err);
+                        return;
+                    }
 
-                arg.config = config;
-                if (config.logLevel) {
-                    log.level(config.logLevel);
-                }
-                if (log.level() <= mod_bunyan.TRACE) {
-                    log.src = true;
-                }
+                    arg.config = config;
+                    if (config.logLevel) {
+                        log.level(config.logLevel);
+                    }
+                    if (log.level() <= mod_bunyan.TRACE) {
+                        log.src = true;
+                    }
 
-                log.debug({config: arg.config}, 'loaded config');
-                next();
-            });
-        },
-        function getSysinfo(arg, next) {
-            tritonConfig.sysinfo(function (err, sysinfoObj) {
-                if (err) {
-                    next(new verror.VError(err, 'fetching sysinfo'));
-                    return;
-                }
+                    log.debug({
+                        config: arg.config
+                    }, 'loaded config');
+                    next();
+                });
+            },
+            function getSysinfo(arg, next) {
+                tritonConfig.sysinfo(function (err, sysinfoObj) {
+                    if (err) {
+                        next(new VError(err, 'fetching sysinfo'));
+                        return;
+                    }
 
-                arg.sysinfo = sysinfoObj;
-                next();
-            });
-        },
-        function createAndStartApp(arg, next) {
-            var ip = firstAdminIp(arg.sysinfo);
-            var app = new App({config: arg.config, log: log, ip: ip});
-            app.start(next);
-        }
+                    arg.sysinfo = sysinfoObj;
+                    next();
+                });
+            },
+            function createAndStartApp(arg, next) {
+                var ip = firstAdminIp(arg.sysinfo);
+                var app = new App({
+                    config: arg.config,
+                    log: log,
+                    ip: ip
+                });
+                app.start(next);
+            }
 
-    ]}, function (err) {
+        ]
+    }, function (err) {
         if (err) {
             log.error(err, 'error starting up');
             process.exitCode = 2;
         } else {
             log.info('startup complete');
-	}
+        }
     });
 
 }
