@@ -20,16 +20,6 @@ Monitor solution. Triton cmon-agent acts as if it is many individual
 Prometheus node-exporters by supporting a polling route per container on the
 compute node it resides on.
 
-Please see
-[RFD 27](https://github.com/joyent/rfd/blob/master/rfd/0027/README.md#) for more
-information.
-
-## Development
-
-```
-make all
-```
-
 ## Test
 
 ```
@@ -41,6 +31,13 @@ make test
 ```
 make check
 ```
+
+## Release
+
+```
+make release
+```
+
 ## Documentation
 
 For an overview of the Triton Container Monitor solution, please see
