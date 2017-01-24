@@ -69,7 +69,7 @@ zfs_available 24630063104
 time_of_day 1485217771997
 ```
 
-## List Metrics (POST /v1/refresh)
+## Refresh (POST /v1/refresh)
 
 Causes the agent to refresh its mapping of vmuuid to zoneid. This is normally
 only called by CMON. An operator could use this endpoint for diagnostic
