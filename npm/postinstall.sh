@@ -65,31 +65,34 @@ function subfile
 }
 
 #
-# Replace substitution tokens in the SMF method and manifest files, and then
-# import the SMF service.
+# Replace substitution tokens in the SMF manifest files, and then import the SMF
+# services.
 #
 function import_smf_manifest
 {
-    local method_in="$ROOT/smf/method/$AGENT.in"
-    local method_out="$ROOT/smf/method/$AGENT"
-    local manifest_in="$ROOT/smf/manifests/$AGENT.xml.in"
-    local manifest_out="$SMF_DIR/$AGENT.xml"
+    local agent_manifest_in="$ROOT/smf/manifests/$AGENT.xml.in"
+    local agent_manifest_out="$SMF_DIR/$AGENT.xml"
+    local agent_setup_manifest_in="$ROOT/smf/manifests/${AGENT}-setup.xml.in"
+    local agent_setup_manifest_out="$SMF_DIR/${AGENT}-setup.xml"
 
-    if [[ ! -f "${method_in}" ]]; then
-        fatal 'could not find smf method input file: %s' "${method_in}"
-    fi
-    if [[ ! -f "${manifest_in}" ]]; then
-        fatal 'could not find smf manifest input file: %s' "${manifest_in}"
+    if [[ ! -f "${agent_manifest_in}" ]]; then
+        fatal 'could not find smf manifest input file: %s' \
+            "${agent_manifest_in}"
     fi
 
-    if ! subfile "${method_in}" "${method_out}" ||
-      ! chmod +x "${method_out}"; then
-        fatal 'could not process smf method (%s)' "${method_in}"
+    if [[ ! -f "${agent_setup_manifest_in}" ]]; then
+        fatal 'could not find smf manifest input file: %s'
+        "${agent_setup_manifest_in}"
     fi
 
-    if ! subfile "${manifest_in}" "${manifest_out}" ||
-      ! svccfg import "${manifest_out}"; then
-        fatal 'could not process smf manifest (%s)' "${manifest_in}"
+    if ! subfile "${agent_manifest_in}" "${agent_manifest_out}" ||
+      ! svccfg import "${agent_manifest_out}"; then
+        fatal 'could not process smf manifest (%s)' "${agent_manifest_in}"
+    fi
+
+    if ! subfile "${agent_setup_manifest_in}" "${agent_setup_manifest_out}" ||
+      ! svccfg import "${agent_setup_manifest_out}"; then
+        fatal 'could not process smf manifest (%s)' "${agent_setup_manifest_in}"
     fi
 }
 
