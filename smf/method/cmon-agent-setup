@@ -21,7 +21,7 @@ set -o xtrace
 
 function setup_logadm {
     mkdir -p -m 0755 /var/log/cmon-agent
-    logadm -w cmon_agent_logs -C 168 -S 1g -c -p 1h \
+    logadm -v -w cmon_agent_logs -C 168 -S 1g -c -p 1h \
         -t '/var/log/cmon-agent/cmon-agent_$nodename_%FT%H:%M:%S.log' \
         /var/svc/log/*cmon-agent*.log
 
@@ -29,8 +29,8 @@ function setup_logadm {
     # that the default '-C' (from
     # https://github.com/joyent/smartos-live/blob/master/overlay/generic/etc/logadm.conf)
     # doesn't defeat our attempts to rotate out of "/var/svc/log".
-    /usr/sbin/logadm -r smf_logs
-    /usr/sbin/logadm -w smf_logs -C 8 -c -s 1m '/var/svc/log/*.log'
+    /usr/sbin/logadm -v -r smf_logs
+    /usr/sbin/logadm -v -w smf_logs -C 8 -c -s 1m '/var/svc/log/*.log'
 }
 
 
