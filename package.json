@@ -21,7 +21,7 @@
     "vasync": "1.6.4"
   },
   "devDependencies": {
-    "tape": "4.2.2",
+    "tape": "4.6.3",
     "eslint": "2.13.1",
     "eslint-plugin-joyent": "1.0.1"
   },

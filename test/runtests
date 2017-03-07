@@ -21,9 +21,26 @@ fi
 set -o errexit
 set -o pipefail
 
+
+
+#---- guard
+
+if [[ ! -f "/lib/sdc/.sdc-test-no-production-data" ]]; then
+    cat <<EOF
+To run this test you must create the file:
+
+    /lib/sdc/.sdc-test-no-production-data
+
+after ensuring you have no production data on this SDC.
+EOF
+    exit 2
+fi
+
+
+
 #---- config
 
-NAME=provisioner
+NAME=cmon-agent
 TOP=$(cd $(dirname $0)/../; pwd)
 
 
@@ -79,8 +96,6 @@ mkdir -p $OUTPUT_DIR
 
 #---- start tests
 
-export NODE_PATH=/usr/node_modules:/usr/vm/node_modules:/usr/img/node_modules
-
 cd $TOP
 
 test_files=$(ls -1 test/*.test.js)
@@ -88,10 +103,14 @@ if [[ -n "$opt_test_pattern" ]]; then
     test_files=$(echo "$test_files" | grep "$opt_test_pattern" || true)
     echo "# Running filtered set of test files: $test_files"
 fi
-/usr/node/bin/node ./node_modules/tape/bin/tape $test_files --reporter=tap \
-    | tee $OUTPUT_DIR/cmon-agent.tap
 
-
+if [ "global" == $(zonename) ]; then
+    $TOP/node/bin/node ./node_modules/tape/bin/tape $test_files \
+        | tee $OUTPUT_DIR/cmon-agent.tap
+else
+    node ./node_modules/tape/bin/tape $test_files \
+        | tee $OUTPUT_DIR/cmon-agent.tap
+fi
 
 #---- summary
 
@@ -117,4 +136,3 @@ echo ""
 if [[ ${tests} != ${passed} ]]; then
     exit 1
 fi
-

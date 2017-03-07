@@ -1,0 +1,5 @@
+#!/bin/bash
+
+make check && scp ./test/*.test.js \
+$1:/opt/smartdc/agents/lib/node_modules/cmon-agent/test/. && \
+ssh $1 /opt/smartdc/agents/lib/node_modules/cmon-agent/test/runtests;

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+make check && rm cmon-agent*.tgz;
+rm cmon-agent*.manifest;
+make release;
+APM_FILE=`scp -qv cmon-agent*.tgz $1:/tmp/. 2>&1 | grep -v debug | \
+grep Sending | awk '{ print $6 }'`;
+ssh $1 "/opt/smartdc/agents/bin/apm install /tmp/$APM_FILE";
+ssh $1 "rm /tmp/$APM_FILE";
