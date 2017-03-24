@@ -14,6 +14,7 @@
 var test = require('tape').test;
 
 var mod_bunyan = require('bunyan');
+var mod_libuuid = require('libuuid');
 var mod_restify = require('restify');
 
 var lib_app = require('../lib/app');
@@ -150,7 +151,29 @@ test('http get metrics for zone succeeds', function _test(t) {
     });
 });
 
-test('http get metrics for zone succeeds', function _test(t) {
+test('http get metrics for missing zone returns 404', function _test(t) {
+    t.plan(4);
+
+    var metrics_route = '/v1/' + mod_libuuid.create() + '/metrics';
+    var client = mod_restify.createStringClient({ url: DEFAULT_ENDPOINT });
+
+    var app = new lib_app(DEFAULT_OPTS);
+    app.start(function _start() {
+        setTimeout(function _timeout() {
+            client.get(metrics_route, function _get(err, req, res, data) {
+                t.ok(err, 'err is set');
+                t.equal(err.statusCode, 404, 'error is 404');
+                t.ok(data);
+                t.equal(data, 'container not found');
+                app.close(function _close() {
+                    t.end();
+                });
+            });
+        }, 2000);
+    });
+});
+
+test('http refresh zones succeeds', function _test(t) {
     t.plan(2);
 
     var refresh_route = '/v1/refresh';

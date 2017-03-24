@@ -95,14 +95,18 @@ test('get metrics', function _test(t) {
 });
 
 test('get metrics fails', function _test(t) {
-    t.plan(2);
+    t.plan(4);
 
     var collector = new lib_instrumenterCollector({ log: log });
     t.throws(function _nonUuid() {
         collector.getMetrics(42, function _noop() {});
     }, 'vm_uuid');
-    t.throws(function _notExist() {
-        collector.getMetrics(mod_libuuid.create(), function _asplode() {});
+    t.doesNotThrow(function _notExist() {
+        var bad_uuid = mod_libuuid.create();
+        collector.getMetrics(bad_uuid, function _noop(err, metrics) {
+            t.notOk(err, 'err is not set');
+            t.notOk(metrics, 'metrics is not set');
+        });
     }, 'vm_uuid does not exist in zones');
 
     t.end();

@@ -32,7 +32,6 @@ JS_FILES	:= $(shell find lib test bin -name '*.js')
 JSSTYLE_FILES	= $(JS_FILES)
 JSSTYLE_FLAGS	= -o indent=4,doxygen,unparenthesized-return=0
 ESLINT		= ./node_modules/.bin/eslint
-ESLINT_CONF	= tools/eslint.node.conf
 ESLINT_FILES	= $(JS_FILES)
 
 # The next line breaks the build due to a variable that eng.git sed expander
@@ -49,7 +48,6 @@ endif
 # Included definitions
 include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node_prebuilt.defs
-include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
 
 NAME :=	cmon-agent
@@ -138,13 +136,18 @@ publish: release
 	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/$(NAME)/$(RELEASE_TARBALL)
 	cp $(TOP)/$(RELEASE_MANIFEST) $(BITS_DIR)/$(NAME)/$(RELEASE_MANIFEST)
 
-.PHONY: check
-check:: $(ESLINT)
-	$(ESLINT) -c $(ESLINT_CONF) $(ESLINT_FILES)
+
+$(ESLINT):
+	npm install
+
+.PHONY: check-eslint
+check-eslint:: $(ESLINT)
+	$(ESLINT) $(ESLINT_FILES)
+
+check:: check-eslint
+
 
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_prebuilt.targ
-include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
-
