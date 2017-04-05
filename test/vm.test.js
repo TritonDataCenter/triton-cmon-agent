@@ -17,7 +17,14 @@ var mod_libuuid = require('libuuid');
 var lib_instrumenterVm = require('../lib/instrumenter/vm');
 var lib_common = require('../lib/common');
 
-var kstatMetrics = { link: {}, memory_caps: {}, zones: {} };
+var kstatMetrics =
+{
+    link: {},
+    memory_caps: {},
+    tcp: {},
+    zone_vfs: {},
+    zones: {}
+};
 kstatMetrics.zones.cpuUserUsage =
 {
     module: 'zones',
@@ -85,6 +92,14 @@ kstatMetrics.memory_caps.memSwapLimit =
     help: 'Swap limit in bytes',
     modifier: lib_common.memLimit
 };
+kstatMetrics.memory_caps.anonAllocFail =
+{
+    module: 'memory_cap',
+    kstat_key: 'anon_alloc_fail',
+    key: 'mem_anon_alloc_fail',
+    type: 'counter',
+    help: 'Anonymous allocation failure count'
+};
 kstatMetrics.link.netAggPacketsIn =
 {
     module: 'link',
@@ -116,6 +131,166 @@ kstatMetrics.link.netAggBytesOut =
     key: 'net_agg_bytes_out',
     type: 'counter',
     help: 'Aggregate outbound bytes'
+};
+kstatMetrics.tcp.attemptFails =
+{
+    module: 'tcp',
+    kstat_key: 'attemptFails',
+    key: 'tcp_failed_connection_attempt_count',
+    type: 'counter',
+    help: 'Failed TCP connection attempts'
+};
+kstatMetrics.tcp.retransmittedSegs =
+{
+    module: 'tcp',
+    kstat_key: 'retransSegs',
+    key: 'tcp_retransmitted_segment_count',
+    type: 'counter',
+    help: 'Retransmitted TCP segments'
+};
+kstatMetrics.tcp.duplicateAcks =
+{
+    module: 'tcp',
+    kstat_key: 'inDupAck',
+    key: 'tcp_duplicate_ack_count',
+    type: 'counter',
+    help: 'Duplicate TCP ACK count'
+};
+kstatMetrics.tcp.listenDrops =
+{
+    module: 'tcp',
+    kstat_key: 'listenDrop',
+    key: 'tcp_listen_drop_count',
+    type: 'counter',
+    help: 'TCP listen drops. Connection refused because backlog full'
+};
+kstatMetrics.tcp.listenDropQ0s =
+{
+    module: 'tcp',
+    kstat_key: 'listenDropQ0',
+    key: 'tcp_listen_drop_Qzero_count',
+    type: 'counter',
+    help: 'Total # of connections refused due to half-open queue (q0) full'
+};
+kstatMetrics.tcp.halfOpenDrops =
+{
+    module: 'tcp',
+    kstat_key: 'halfOpenDrop',
+    key: 'tcp_half_open_drop_count',
+    type: 'counter',
+    help: 'TCP connection dropped from a full half-open queue'
+};
+kstatMetrics.tcp.retransmitTimeouts =
+{
+    module: 'tcp',
+    kstat_key: 'timRetransDrop',
+    key: 'tcp_retransmit_timeout_drop_count',
+    type: 'counter',
+    help: 'TCP connection dropped due to retransmit timeout'
+};
+kstatMetrics.tcp.activeOpens =
+{
+    module: 'tcp',
+    kstat_key: 'activeOpens',
+    key: 'tcp_active_open_count',
+    type: 'counter',
+    help: 'TCP active open connections'
+};
+kstatMetrics.tcp.passiveOpens =
+{
+    module: 'tcp',
+    kstat_key: 'passiveOpens',
+    key: 'tcp_passive_open_count',
+    type: 'counter',
+    help: 'TCP passive open connections'
+};
+kstatMetrics.tcp.currEstab =
+{
+    module: 'tcp',
+    kstat_key: 'currEstab',
+    key: 'tcp_current_established_connections_total',
+    type: 'gauge',
+    help: 'TCP total established connections'
+};
+kstatMetrics.zone_vfs.nread =
+{
+    module: 'zone_vfs',
+    kstat_key: 'nread',
+    key: 'vfs_bytes_read_count',
+    type: 'counter',
+    help: 'VFS number of bytes read'
+};
+kstatMetrics.zone_vfs.nwritten =
+{
+    module: 'zone_vfs',
+    kstat_key: 'nwritten',
+    key: 'vfs_bytes_written_count',
+    type: 'counter',
+    help: 'VFS number of bytes written'
+};
+kstatMetrics.zone_vfs.reads =
+{
+    module: 'zone_vfs',
+    kstat_key: 'reads',
+    key: 'vfs_read_operation_count',
+    type: 'counter',
+    help: 'VFS number of read operations'
+};
+kstatMetrics.zone_vfs.writes =
+{
+    module: 'zone_vfs',
+    kstat_key: 'writes',
+    key: 'vfs_write_operation_count',
+    type: 'counter',
+    help: 'VFS number of write operations'
+};
+kstatMetrics.zone_vfs.wtime =
+{
+    module: 'zone_vfs',
+    kstat_key: 'wtime',
+    key: 'vfs_wait_time_count',
+    type: 'counter',
+    help: 'VFS cumulative wait (pre-service) time'
+};
+kstatMetrics.zone_vfs.wlentime =
+{
+    module: 'zone_vfs',
+    kstat_key: 'wlentime',
+    key: 'vfs_wait_length_time_count',
+    type: 'counter',
+    help: 'VFS cumulative wait length*time product'
+};
+kstatMetrics.zone_vfs.rtime =
+{
+    module: 'zone_vfs',
+    kstat_key: 'rtime',
+    key: 'vfs_run_time_count',
+    type: 'counter',
+    help: 'VFS cumulative run (pre-service) time'
+};
+kstatMetrics.zone_vfs.rlentime =
+{
+    module: 'zone_vfs',
+    kstat_key: 'wlentime',
+    key: 'vfs_run_length_time_count',
+    type: 'counter',
+    help: 'VFS cumulative run length*time product'
+};
+kstatMetrics.zone_vfs.wcnt =
+{
+    module: 'zone_vfs',
+    kstat_key: 'wcnt',
+    key: 'vfs_elements_wait_state',
+    type: 'gauge',
+    help: 'VFS number of elements in wait state'
+};
+kstatMetrics.zone_vfs.rcnt =
+{
+    module: 'zone_vfs',
+    kstat_key: 'rcnt',
+    key: 'vfs_elements_run_state',
+    type: 'gauge',
+    help: 'VFS number of elements in run state'
 };
 
 var zfsMetrics = {};
@@ -228,7 +403,7 @@ test('getLinkKstats', function _test(t) {
     t.plan(12);
 
     _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
-        t.notOk(cvmierr, 'creating vm instrumenter should not return an error');
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
         vmi.getLinkKstats(function _cb(err, stats) {
             t.notOk(err, 'getLinkKStats should not return an error');
             t.ok(stats, 'stats should return a link kstats object');
@@ -251,13 +426,13 @@ test('getLinkKstats', function _test(t) {
 });
 
 test('getMemCapsKstats', function _test(t) {
-    t.plan(12);
+    t.plan(14);
 
     _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
-        t.notOk(cvmierr, 'creating vm instrumenter should not return an error');
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
         vmi.getMemCapsKstats(function _cb(err, stats) {
             t.notOk(err, 'getMemCapsKStats should not return an error');
-            t.ok(stats, 'stats should return a link kstats object');
+            t.ok(stats, 'stats should return a memory_cap kstats object');
 
             var mcapKeys = Object.keys(kstatMetrics.memory_caps);
             var mcklen = mcapKeys.length;
@@ -276,11 +451,63 @@ test('getMemCapsKstats', function _test(t) {
     });
 });
 
+test('getTcpKstats', function _test(t) {
+    t.plan(24);
+
+    _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
+        vmi.getTcpKstats(function _cb(err, stats) {
+            t.notOk(err, 'getTcpKStats should not return an error');
+            t.ok(stats, 'stats should return a tcp kstats object');
+
+            var tcpKeys = Object.keys(kstatMetrics.tcp);
+            var tcplen = tcpKeys.length;
+            var statlen = Object.keys(stats).length;
+
+            t.equal(statlen, tcplen, 'stat count does not match expected');
+
+            for (var i = 0; i < tcplen; i++) {
+                var key = tcpKeys[i];
+                t.ok(stats[key], 'tcp kstat is defined');
+                t.ok(isFinite(stats[key].value), 'value is int');
+            }
+
+            t.end();
+        });
+    });
+});
+
+test('getZoneVfsKstats', function _test(t) {
+    t.plan(24);
+
+    _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
+        vmi.getZoneVfsKstats(function _cb(err, stats) {
+            t.notOk(err, 'getZoneVfsKStats should not return an error');
+            t.ok(stats, 'stats should return a zone_vfs kstats object');
+
+            var zvfsKeys = Object.keys(kstatMetrics.zone_vfs);
+            var zvfslen = zvfsKeys.length;
+            var statlen = Object.keys(stats).length;
+
+            t.equal(statlen, zvfslen, 'stat count does not match expected');
+
+            for (var i = 0; i < zvfslen; i++) {
+                var key = zvfsKeys[i];
+                t.ok(stats[key], 'zone_vfs kstat is defined');
+                t.ok(isFinite(stats[key].value), 'value is int');
+            }
+
+            t.end();
+        });
+    });
+});
+
 test('getZonesKstats', function _test(t) {
     t.plan(12);
 
     _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
-        t.notOk(cvmierr, 'creating vm instrumenter should not return an error');
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
         vmi.getZonesKstats(function _cb(err, stats) {
             t.notOk(err, 'getZonesKStats should not return an error');
             t.ok(stats, 'stats should return a link kstats object');
@@ -306,7 +533,7 @@ test('getZfsStats', function _test(t) {
     t.plan(8);
 
     _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
-        t.notOk(cvmierr, 'creating vm instrumenter should not return an error');
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
         vmi.getZfsStats(function _cb(err, stats) {
             t.notOk(err, 'getZfsStats should not return an error');
             t.ok(stats, 'stats should return a link kstats object');
@@ -332,7 +559,7 @@ test('getTimeStats', function _test(t) {
     t.plan(6);
 
     _createVmInstrumenter(function _cvmi(cvmierr, vmi) {
-        t.notOk(cvmierr, 'creating vm instrumenter should not return an error');
+        t.ifError(cvmierr, 'creating vm instrumenter does not error');
         vmi.getTimeStats(function _cb(err, stats) {
             t.notOk(err, 'getTimeStats should not return an error');
             t.ok(stats, 'stats should return a link kstats object');

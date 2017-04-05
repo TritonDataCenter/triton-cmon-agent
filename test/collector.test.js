@@ -58,7 +58,7 @@ test('create collector fails', function _test(t) {
 });
 
 test('get metrics', function _test(t) {
-    t.plan(78);
+    t.plan(183);
 
     var collector = new lib_instrumenterCollector({ log: log });
     collector.refreshZoneCache(function _refresh(refreshErr) {

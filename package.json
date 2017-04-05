@@ -1,7 +1,7 @@
 {
   "name": "cmon-agent",
   "description": "Triton Container Monitor Agent",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "author": "Joyent (joyent.com)",
   "repository": {
     "type": "git",
@@ -11,11 +11,10 @@
   "dependencies": {
     "assert-plus": "1.0.0",
     "bunyan": "1.8.1",
-    "forkexec": "^1.1.0",
+    "forkexec": "1.1.0",
     "kstat": "1.0.1",
     "libuuid": "0.2.1",
     "lru-cache": "4.0.1",
-    "prom-client": "3.4.6",
     "restify": "4.1.1",
     "sprintf-js": "1.0.3",
     "vasync": "1.6.4"
