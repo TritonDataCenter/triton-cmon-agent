@@ -32,7 +32,8 @@ rsync -av ${TOP}/ \
     --exclude /docs/ \
     --exclude /tools/ \
     --exclude /tmp/ \
-    --exclude /node_modules/
+    --exclude /node_modules/ \
+    --no-owner
 
 state=$(ssh ${NODE} svcs -H -o state cmon-agent)
 if [[ "$state" == "maintenance" ]]; then
