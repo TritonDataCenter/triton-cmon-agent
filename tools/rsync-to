@@ -31,7 +31,7 @@ rsync -av ${TOP}/ \
     --exclude /deps/ \
     --exclude /docs/ \
     --exclude /tools/ \
-    --exclude /tmp/
+    --exclude /tmp/ \
     --exclude /node_modules/
 
 state=$(ssh ${NODE} svcs -H -o state cmon-agent)
