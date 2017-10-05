@@ -6,7 +6,7 @@ metrics.
 
 # The cmon-agent exposes the following HTTP API:
 
-## List Metrics (GET /v1/:vmuuid/metrics)
+## List VM Metrics (GET /v1/:vmuuid/metrics)
 
 Retrieve Prometheus text format data to be consumed by CMON
 
@@ -68,6 +68,71 @@ zfs_available 24630063104
 # TYPE time_of_day counter
 time_of_day 1485217771997
 ```
+
+
+## List GZ Metrics (GET /v1/gz/metrics)
+
+Retrieve Prometheus text format data to be consumed by CMON
+
+### Responses
+
+| Code | Description    | Response                         |
+| ---- | -------------- | -------------------------------- |
+| 200  | Response OK    | Prometheus text formatted output |
+| 404  | VM not found   | Not found error string           |
+| 500  | Internal Error | Internal error string            |
+
+### Example
+```
+GET /v1/gz/metrics
+---
+# HELP arcstats_anon_evictable_data_bytes ARC anonymous evictable data
+# TYPE arcstats_anon_evictable_data_bytes gauge
+arcstats_anon_evictable_data_bytes 0
+# HELP arcstats_anon_evictable_metadata_bytes ARC anonymous evictable metadata
+# TYPE arcstats_anon_evictable_metadata_bytes gauge
+arcstats_anon_evictable_metadata_bytes 0
+# HELP arcstats_anon_size_bytes ARC anonymous size
+# TYPE arcstats_anon_size_bytes gauge
+arcstats_anon_size_bytes 23246336
+# HELP arcstats_arc_meta_limit_bytes ARC metadata limit
+# TYPE arcstats_arc_meta_limit_bytes gauge
+arcstats_arc_meta_limit_bytes 2852140032
+# HELP arcstats_arc_meta_max_bytes ARC metadata maximum observed size
+# TYPE arcstats_arc_meta_max_bytes gauge
+arcstats_arc_meta_max_bytes 896866192
+# HELP arcstats_arc_meta_min_bytes ARC metadata minimum
+# TYPE arcstats_arc_meta_min_bytes gauge
+arcstats_arc_meta_min_bytes 713035008
+# HELP arcstats_arc_meta_used_bytes ARC metadata used
+# TYPE arcstats_arc_meta_used_bytes gauge
+arcstats_arc_meta_used_bytes 613959304
+# HELP arcstats_target_cache_size_bytes ARC target cache size
+# TYPE arcstats_target_cache_size_bytes gauge
+arcstats_target_cache_size_bytes 2628193792
+# HELP arcstats_max_target_cache_size_bytes ARC maximum target cache size
+# TYPE arcstats_max_target_cache_size_bytes gauge
+arcstats_max_target_cache_size_bytes 11408560128
+# HELP arcstats_min_target_cache_size_bytes ARC minimum target cache size
+# TYPE arcstats_min_target_cache_size_bytes gauge
+arcstats_min_target_cache_size_bytes 1426070016
+# HELP arcstats_compressed_size_bytes ARC compressed size
+# TYPE arcstats_compressed_size_bytes gauge
+arcstats_compressed_size_bytes 2171045376
+# HELP arcstats_data_size_bytes Number of bytes consumed by ARC buffers backing on disk data
+# TYPE arcstats_data_size_bytes gauge
+arcstats_data_size_bytes 2024793088
+# HELP arcstats_demand_data_hits_total ARC demand data hits
+# TYPE arcstats_demand_data_hits_total counter
+arcstats_demand_data_hits_total 27909081
+# HELP arcstats_demand_data_misses_total ARC demand data misses
+# TYPE arcstats_demand_data_misses_total counter
+arcstats_demand_data_misses_total 5937356166
+# HELP arcstats_demand_hit_predictive_prefetch_total ARC demand hit predictive prefetch
+# TYPE arcstats_demand_hit_predictive_prefetch_total counter
+arcstats_demand_hit_predictive_prefetch_total 3493859
+```
+
 
 ## Refresh (POST /v1/refresh)
 
