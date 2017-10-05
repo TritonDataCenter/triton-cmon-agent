@@ -12,10 +12,11 @@
     "assert-plus": "1.0.0",
     "bunyan": "1.8.1",
     "forkexec": "1.1.0",
+    "jsprim": "1.4.1",
     "kstat": "1.0.1",
     "libuuid": "0.2.1",
     "lru-cache": "4.0.1",
-    "restify": "4.1.1",
+    "restify": "4.3.0",
     "sprintf-js": "1.0.3",
     "vasync": "1.6.4"
   },
