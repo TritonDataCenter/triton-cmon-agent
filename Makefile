@@ -28,7 +28,8 @@
 
 CLEAN_FILES += ./node_modules
 DOC_FILES	 = index.md
-JS_FILES	:= $(shell find lib test bin -name '*.js')
+JS_FILES	:= $(shell find lib test bin -name '*.js') \
+	bin/cmon-agent bin/collector-collect bin/collector-dump
 JSSTYLE_FILES	= $(JS_FILES)
 JSSTYLE_FLAGS	= -o indent=4,doxygen,unparenthesized-return=0
 ESLINT		= ./node_modules/.bin/eslint
@@ -94,7 +95,6 @@ release: all deps $(SMF_MANIFESTS)
 
 	cd $(TOP) && $(RUN_NPM_INSTALL)
 	cp -r \
-	    $(TOP)/Makefile \
 	    $(TOP)/bin \
 	    $(TOP)/build/node \
 	    $(TOP)/lib \
@@ -104,7 +104,6 @@ release: all deps $(SMF_MANIFESTS)
 	    $(TOP)/sapi_manifests \
 	    $(TOP)/smf \
 	    $(TOP)/test \
-	    $(TOP)/tools \
 	    $(RELSTAGEDIR)/$(NAME)
 	# Trim node
 	rm -rf \

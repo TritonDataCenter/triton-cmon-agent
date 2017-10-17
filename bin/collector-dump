@@ -1,0 +1,176 @@
+#!/opt/smartdc/agents/lib/node_modules/cmon-agent/node/bin/node
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+/*
+ * Copyright (c) 2017, Joyent, Inc.
+ */
+
+/*
+ * This dumps out a prometheus-compatible set of output lines that represent
+ * the state from the data passed on stdin (or a file if `-f <filename>` was
+ * specified. This can be useful especially when combined with the
+ * collector-collect tool. For example:
+ *
+ *   $ collector-collect -G > data.json
+ *   $ collector-dump -G -f data.json
+ *   ...<prometheus data would be here>...
+ *
+ * allows one to take a snapshot of the system's state and then output what the
+ * collector would have dumped to a client for the given system state. It also
+ * allows one to check how various changes in output from the core components
+ * would change the output, as the JSON file can be modified more easily than
+ * changing the actual output of the kstat reader or zfs tools.
+ *
+ * NOTE: This tool may change at any time. It's intended for use by Engineers
+ * and Operators when directed by Engineering. Do not rely on the interface to
+ * this tool.
+ *
+ */
+
+'use strict';
+
+var mod_fs = require('fs');
+
+var mod_assert = require('assert-plus');
+var mod_dashdash = require('dashdash');
+
+var collector_harness = require('../test/collector-harness');
+
+
+var CLI_NAME = 'collector-dump';
+var CLI_OPTIONS = [
+    {
+        names: ['file', 'f'],
+        type: 'string',
+        help: 'read from FILENAME instead of stdin (default)',
+        helpArg: 'FILENAME'
+    },
+    {
+        names: ['gz', 'G'],
+        type: 'bool',
+        help: 'dump only GZ'
+    },
+    {
+        names: ['help', 'h'],
+        type: 'bool',
+        help: 'Print this help and exit.'
+    },
+    {
+        names: ['vm', 'V'],
+        type: 'string',
+        help: 'dump only the VM specified.',
+        helpArg: 'VM_UUID'
+    }
+];
+
+function dumpHelp(parser, outputFn) {
+    var help = parser.help({includeEnv: true}).trimRight();
+
+    outputFn('Usage: %s [-f <filename>] [-G|-V <vm_uuid>]\n' +
+        'Options:\n\n%s\n', CLI_NAME, help);
+    console.log('Examples:\n\n' +
+        '    ' + CLI_NAME + ' -G\n\n' +
+        '        - output data for the GZ\n\n' +
+        '    ' + CLI_NAME + ' -V <vm_uuid>\n\n' +
+        '        - output data for the VM whose UUID is <vm_uuid>\n\n');
+}
+
+function main() {
+    var cli_opts;
+    var cli_parser = mod_dashdash.createParser({options: CLI_OPTIONS});
+    var config = {};
+
+    try {
+        cli_opts = cli_parser.parse(process.argv);
+    } catch (e) {
+        console.error('%s: Fatal: %s', CLI_NAME, e.message);
+        dumpHelp(cli_parser, console.error);
+        process.exit(1);
+    }
+
+    // Use `parser.help()` for formatted options help.
+    if (cli_opts.help) {
+        dumpHelp(cli_parser, console.log);
+        process.exit(0);
+    }
+
+    if (cli_opts.gz === undefined && cli_opts.vm === undefined) {
+        console.error('%s: Fatal: must specify at least one of -G or -V',
+            CLI_NAME);
+        dumpHelp(cli_parser, console.error);
+        process.exit(1);
+    }
+
+    if (cli_opts.gz !== undefined && cli_opts.vm !== undefined) {
+        console.error('%s: Fatal: cannot specify both of -G and -V',
+            CLI_NAME);
+        dumpHelp(cli_parser, console.error);
+        process.exit(1);
+    }
+
+    if (cli_opts.gz === true) {
+        config.target = 'gz';
+    } else {
+        config.target = cli_opts.vm;
+    }
+
+    if (cli_opts.file) {
+        config.filename = cli_opts.file;
+    } else {
+        config.filename = '/dev/stdin';
+    }
+
+    processData(config, function _onData(err, data) {
+        if (err && err.code === 'ENOENT') {
+            console.error('%s: Fatal: file "%s" does not exist.',
+                CLI_NAME, config.filename);
+            dumpHelp(cli_parser, console.error);
+            process.exit(1);
+        }
+        mod_assert.ifError(err, 'failed to load data');
+
+        // console.log adds a newline, so remove the existing one then dump
+        // output to stdout.
+        console.log(data.trim());
+    });
+}
+
+function processData(config, callback) {
+    mod_assert.object(config, 'config');
+    mod_assert.string(config.filename, 'config.filename');
+    mod_assert.string(config.target, 'config.target');
+    mod_assert.func(callback, 'callback');
+
+    mod_fs.readFile(config.filename, function _onRead(readErr, data) {
+        var jsonObj;
+
+        if (readErr) {
+            callback(readErr);
+            return;
+        }
+
+        jsonObj = JSON.parse(data);
+
+        collector_harness.createCollector({
+            mockData: jsonObj
+        }, function _collectorCb(collector) {
+            collector.getMetrics(config.target,
+                function _gotMetrics(err, metrics) {
+
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                collector.stop();
+                callback(null, metrics);
+            });
+        });
+    });
+}
+
+// Call main() to get the party started.
+main();

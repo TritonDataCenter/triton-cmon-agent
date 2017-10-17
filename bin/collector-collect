@@ -1,0 +1,331 @@
+#!/opt/smartdc/agents/lib/node_modules/cmon-agent/node/bin/node
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+/*
+ * Copyright (c) 2017, Joyent, Inc.
+ */
+
+/*
+ * This outputs a JSON blob that represents the current system's state that's
+ * relevant for the collectors. This JSON blob can be used with the collector
+ * harness to drive tests.
+ *
+ * This is also useful when bugs are found in production. On a system where
+ * metrics are incorrect, the collector-collect tool can be run to grab a
+ * snapshot of the state on the system with the problem. That snapshot can then
+ * be used to reproduce the problem and generate a new test case to prevent
+ * regression.
+ *
+ * For debugging, one can also run something like:
+ *
+ *   collector-collect -G | collector-dump -G
+ *
+ * to read the GZ stats from the current system in prometheus-compatible format.
+ *
+ * NOTE: This tool may change at any time. It's intended for use by Engineers
+ * and Operators when directed by Engineering. Do not rely on the interface to
+ * this tool.
+ *
+ */
+
+'use strict';
+var mod_assert = require('assert-plus');
+var mod_bunyan = require('bunyan');
+var mod_dashdash = require('dashdash');
+var mod_jsprim = require('jsprim');
+var mod_vasync = require('vasync');
+
+var kstat_common = require('../lib/instrumenter/lib/kstat-common');
+var lib_instrumenterCollector = require('../lib/instrumenter/collector');
+
+var CLI_NAME = 'collector-collect';
+var CLI_OPTIONS = [
+    {
+        names: ['gz', 'G'],
+        type: 'bool',
+        help: 'collect only GZ'
+    },
+    {
+        names: ['help', 'h'],
+        type: 'bool',
+        help: 'Print this help and exit.'
+    },
+    {
+        names: ['vms', 'V'],
+        type: 'bool',
+        help: 'collect only VMs.'
+    }
+];
+
+var log = mod_bunyan.createLogger({
+    name: 'collector_collect',
+    level: process.env['LOG_LEVEL'] || 'error',
+    stream: process.stderr
+});
+
+function dumpHelp(parser, outputFn) {
+    var help = parser.help({includeEnv: true}).trimRight();
+
+    outputFn('Usage: %s [-G] [-V [<vm_uuid>, <vm_uuid> ...]]\n' +
+        'Options:\n\n%s\n', CLI_NAME, help);
+    console.log('Examples:\n\n' +
+        '    ' + CLI_NAME + ' -G -V\n\n' +
+        '        - output a JSON blob with data for the GZ and all VMs\n\n' +
+        '    ' + CLI_NAME + ' -G -V <vm_uuid>\n\n' +
+        '        - output a JSON blob with data for both the GZ and the ' +
+            'one VM whose UUID is <vm_uuid>\n\n' +
+        '    ' + CLI_NAME + ' -G\n\n' +
+        '        - output a JSON blob with data for only the GZ\n\n' +
+        '    ' + CLI_NAME + ' -V\n\n' +
+        '        - output a JSON blob with data for all VMs (w/o GZ)\n\n' +
+        '    ' + CLI_NAME + ' -V <vm_uuid1> <vm_uuid2>\n\n' +
+        '        - output a JSON blob with data for only 2 VMs whose ' +
+            'uuids are <vm_uuid1> and <vm_uuid2>\n\n');
+}
+
+function main() {
+    var cli_opts;
+    var cli_parser = mod_dashdash.createParser({options: CLI_OPTIONS});
+    var config = {
+        include_gz: false,
+        include_vms: false,
+        limit_vms: []
+    };
+
+    try {
+        cli_opts = cli_parser.parse(process.argv);
+    } catch (e) {
+        console.error('%s: Fatal: %s', CLI_NAME, e.message);
+        dumpHelp(cli_parser, console.error);
+        process.exit(1);
+    }
+
+    // Use `parser.help()` for formatted options help.
+    if (cli_opts.help) {
+        dumpHelp(cli_parser, console.log);
+        process.exit(0);
+    }
+
+    if (cli_opts.gz === undefined && cli_opts.vms === undefined) {
+        console.error('%s: Fatal: must specify at least one of -G or -V',
+            CLI_NAME);
+        dumpHelp(cli_parser, console.error);
+        process.exit(1);
+    }
+
+    if (cli_opts.gz === true) {
+        config.include_gz = true;
+    }
+
+    if (cli_opts.vms === true) {
+        config.include_vms = true;
+    }
+
+    if (cli_opts._args.length > 0) {
+        // If args are specified but -V is not specified, it makes no sense
+        // because they're giving us VMs but haven't asked us to output VMs.
+        if (!config.include_vms) {
+            console.error('%s: Fatal: VMs specified without -V', CLI_NAME);
+            dumpHelp(cli_parser, console.error);
+            process.exit(1);
+        }
+
+        // if any of these aren't actual VM UUIDs, we'll fail to load those
+        config.limit_vms = cli_opts._args;
+    }
+
+    collectData(config, function _onData(err, data) {
+        mod_assert.ifError(err, 'failed to load data');
+
+        console.log(JSON.stringify(data, null, 4));
+    });
+}
+
+function addZfsUsage(collector, vms, callback) {
+
+    // TODO: Would forEachParallel hose the system?
+    mod_vasync.forEachPipeline({
+        func: function _getZfsUsage(vmUuid, cb) {
+            collector.getZfsUsage(vmUuid, function _onUsage(err, usage) {
+                if (!err) {
+                    vms[vmUuid].zfs = usage;
+                }
+                cb(err);
+            });
+        },
+        inputs: Object.keys(vms)
+    }, function _gotZfsUsage(err) {
+        mod_assert.ifError(err, 'failed to get zfs usage data');
+        callback();
+    });
+}
+
+function addKstats(collector, kstatRead, kstatDir) {
+    var idx;
+    var keys;
+    var collectors;
+
+    // collectors will for example be the set of collectors-gz collectors
+    collectors = collector.collectors[kstatDir];
+
+    keys = Object.keys(collectors);
+    for (idx = 0; idx < keys.length; idx++) {
+        collector = collectors[keys[idx]];
+
+        if (collector.kstatReadOpts !== undefined) {
+            kstatRead.push(collector.kstatReadOpts);
+        }
+    }
+}
+
+function loadKstats(vms, kstats, vmKstatRead, gzKstatRead, reader, callback) {
+    var doneQueries = {};
+    var getOpts;
+    var _kstats;
+    var kstatIdx;
+    var kstatQuery;
+    var kstatQueryStr;
+    var readIdx;
+    var vmIdx;
+    var vmKeys;
+    var vmObj;
+
+    // first load all the VM Kstats
+    for (readIdx = 0; readIdx < vmKstatRead.length; readIdx++) {
+        vmKeys = Object.keys(vms);
+        for (vmIdx = 0; vmIdx < vmKeys.length; vmIdx++) {
+            vmObj = vms[vmKeys[vmIdx]];
+
+            getOpts = {
+                vm_instance: vmObj.instance,
+                vm_uuid: vmKeys[vmIdx]
+            };
+
+            kstatQuery = kstat_common.kstatReadOpts(getOpts,
+                vmKstatRead[readIdx]);
+            kstatQueryStr = JSON.stringify(kstatQuery);
+
+            // Do the kstat query if we've not already gathered this info, and
+            // put the results in 'kstats' array that was passed in.
+            if (!doneQueries.hasOwnProperty(kstatQueryStr)) {
+                _kstats = reader.read(kstatQuery);
+                for (kstatIdx = 0; kstatIdx < _kstats.length; kstatIdx++) {
+                    kstats.push(_kstats[kstatIdx]);
+                }
+                doneQueries[kstatQueryStr] = true;
+            }
+        }
+    }
+
+    // then do something similar for GZ Kstats
+    for (readIdx = 0; readIdx < gzKstatRead.length; readIdx++) {
+        kstatQuery = kstat_common.kstatReadOpts({}, gzKstatRead[readIdx]);
+        kstatQueryStr = JSON.stringify(kstatQuery);
+
+        // Do the kstat query if we've not already gathered this info, and
+        // put the results in 'kstats' array that was passed in.
+        if (!doneQueries.hasOwnProperty(kstatQueryStr)) {
+            _kstats = reader.read(kstatQuery);
+            for (kstatIdx = 0; kstatIdx < _kstats.length; kstatIdx++) {
+                kstats.push(_kstats[kstatIdx]);
+            }
+            doneQueries[kstatQueryStr] = true;
+        }
+    }
+
+    callback();
+}
+
+function collectData(config, callback) {
+    var dummyCollector = new lib_instrumenterCollector({ log: log });
+
+    dummyCollector.start(function _onStart() {
+        var gzKstatRead = [];
+        var kstats = [];
+        var timestamp = Date.now();
+        var vms = {};
+        var vmKstatRead = [];
+
+        // get *all* zones
+        if (config.include_vms) {
+            vms = mod_jsprim.deepCopy(dummyCollector.zones);
+        }
+
+        mod_vasync.pipeline({
+            funcs: [
+                function _filterVms(_, cb) {
+                    var vmIdx;
+                    var vmKeys;
+
+                    // Cut down to just those VMs that were requested.
+                    if (!config.include_vms || config.limit_vms.length === 0) {
+                        cb();
+                        return;
+                    }
+
+                    // First pass, remove any that aren't in limit_vms.
+                    vmKeys = Object.keys(vms);
+                    for (vmIdx = 0; vmIdx < vmKeys.length; vmIdx++) {
+                        if (config.limit_vms.indexOf(vmKeys[vmIdx]) === -1) {
+                            delete vms[vmKeys[vmIdx]];
+                        }
+                    }
+
+                    // At this point anything in vms is also in limit_vms, so if
+                    // they're not the same length, some are missing.
+                    if (Object.keys(vms).length !== config.limit_vms.length) {
+                        cb(new Error('Some requested VMs not found. ' +
+                            'Expected: ' + JSON.stringify(config.limit_vms) +
+                             ' ' +
+                            'Got: ' + JSON.stringify(Object.keys(vms))));
+                        return;
+                    }
+                    cb();
+                }, function _addZfsUsage(_, cb) {
+                    if (!config.include_vms) {
+                        cb();
+                        return;
+                    }
+
+                    addZfsUsage(dummyCollector, vms, cb);
+                }, function _discoverKstats(_, cb) {
+                    if (config.include_vms) {
+                        addKstats(dummyCollector, vmKstatRead, 'collectors-vm');
+                    }
+
+                    if (config.include_gz) {
+                        addKstats(dummyCollector, gzKstatRead, 'collectors-gz');
+                    }
+
+                    cb();
+                }, function _loadKstats(_, cb) {
+                    loadKstats(vms, kstats, vmKstatRead, gzKstatRead,
+                        dummyCollector.reader, cb);
+                }
+            ]
+        }, function _afterPipeline(err) {
+            var resultObj = {
+                timestamp: timestamp
+            };
+
+            dummyCollector.stop();
+
+            if (kstats.length > 0) {
+                resultObj.kstats = kstats;
+            }
+
+            if (Object.keys(vms).length > 0) {
+                resultObj.vms = vms;
+            }
+
+            callback(err, resultObj);
+        });
+    });
+}
+
+// Call main() to get the party started.
+main();

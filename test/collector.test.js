@@ -25,7 +25,7 @@ var log = mod_bunyan.createLogger(
         stream: process.stderr
     });
 
-test('create collector', function _test(t) {
+test('create collector should work with valid opts', function _test(t) {
     t.plan(5);
 
     var collector;
@@ -41,7 +41,7 @@ test('create collector', function _test(t) {
     t.end();
 });
 
-test('create collector fails', function _test(t) {
+test('create collector should fail when given invalid opts', function _test(t) {
     t.plan(3);
 
     var collector;
@@ -57,7 +57,7 @@ test('create collector fails', function _test(t) {
     t.end();
 });
 
-test('get metrics', function _test(t) {
+test('get metrics returns expected metrics for first VM', function _test(t) {
     t.plan(183);
 
     var collector = new lib_instrumenterCollector({ log: log });
@@ -86,8 +86,11 @@ test('get metrics', function _test(t) {
                     var metric_parts = metrics[i++].split(' ');
                     var metric_name = metric_parts[0];
                     var metric_value = metric_parts[1];
-                    t.ok(/^[a-zA-Z_]+$/.test(metric_name),
-                        'metric name is alpha');
+                    /* BEGIN JSSTYLED */
+                    t.ok(/^[a-zA-Z0-9_{}=\"\"]+$/.test(metric_name),
+                        'metric name contains only name/label characters, ' +
+                        'got: ' + metric_name);
+                    /* END JSSTYLED */
                     t.ok(Number.isFinite(parseInt(metric_value)) ||
                         Number.isFinite(parseFloat(metric_value)),
                         'metric value is finite');
@@ -99,8 +102,8 @@ test('get metrics', function _test(t) {
     });
 });
 
-test('get metrics fails', function _test(t) {
-    t.plan(4);
+test('get metrics fails when passed invalid VM uuid', function _test(t) {
+    t.plan(5);
 
     var collector = new lib_instrumenterCollector({ log: log });
     collector.start(function _afterStarting() {
@@ -110,7 +113,8 @@ test('get metrics fails', function _test(t) {
         t.doesNotThrow(function _notExist() {
             var bad_uuid = mod_libuuid.create();
             collector.getMetrics(bad_uuid, function _noop(err, metrics) {
-                t.notOk(err, 'err is not set');
+                t.ok(err, 'err is set');
+                t.equal(err.code, 'ENOTFOUND', 'error should be ENOTFOUND');
                 t.notOk(metrics, 'metrics is not set');
             });
         }, 'vm_uuid does not exist in zones');
@@ -119,7 +123,7 @@ test('get metrics fails', function _test(t) {
     });
 });
 
-test('refresh zone cache', function _test(t) {
+test('refresh zone cache should not explode', function _test(t) {
     t.plan(3);
 
     var collector = new lib_instrumenterCollector({ log: log });

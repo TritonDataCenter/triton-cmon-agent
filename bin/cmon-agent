@@ -33,20 +33,21 @@ function loadConfig(cb) {
     mod_assert.func(cb, 'cb');
 
     log.debug({CONFIG_PATH: CONFIG_PATH}, 'loadConfig');
-    mod_fs.readFile(CONFIG_PATH, {encoding: 'utf8'}, function (err, data) {
-        if (err && err.code === 'ENOENT') {
-            log.error({confErr: err}, 'Config is missing, using defaults');
-            cb(null, DEFAULT_CONFIG);
-        } else if (err) {
-            cb(err);
-        } else {
-            try {
-                cb(null, JSON.parse(data));
-            } catch (parseErr) {
-                cb(VError(parseErr, 'could not parse ' + CONFIG_PATH));
+    mod_fs.readFile(CONFIG_PATH, {encoding: 'utf8'},
+        function _readFile(err, data) {
+            if (err && err.code === 'ENOENT') {
+                log.error({confErr: err}, 'Config is missing, using defaults');
+                cb(null, DEFAULT_CONFIG);
+            } else if (err) {
+                cb(err);
+            } else {
+                try {
+                    cb(null, JSON.parse(data));
+                } catch (parseErr) {
+                    cb(VError(parseErr, 'could not parse ' + CONFIG_PATH));
+                }
             }
-        }
-    });
+        });
 }
 
 function main() {
@@ -54,7 +55,7 @@ function main() {
         arg: {},
         funcs: [
             function getConfigAndSetupLogging(arg, next) {
-                loadConfig(function (err, config) {
+                loadConfig(function _loadedConfig(err, config) {
                     if (err) {
                         next(err);
                         return;
@@ -75,7 +76,7 @@ function main() {
                 });
             },
             function getSysinfo(arg, next) {
-                tritonConfig.sysinfo(function (err, sysinfoObj) {
+                tritonConfig.sysinfo(function _loadedSysinfo(err, sysinfoObj) {
                     if (err) {
                         next(new VError(err, 'fetching sysinfo'));
                         return;
@@ -96,7 +97,7 @@ function main() {
             }
 
         ]
-    }, function (err) {
+    }, function _mainPipelineCb(err) {
         if (err) {
             log.error(err, 'error starting up');
             process.exitCode = 2;

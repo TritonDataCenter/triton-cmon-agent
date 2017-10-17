@@ -142,6 +142,12 @@ test('http get metrics for zone succeeds', function _test(t) {
                 client.get(metrics_route, function _get(err, req, res, data) {
                     t.notOk(err, 'err is not set');
                     t.ok(data, 'data is set');
+
+                    // We need to close our client, since the server waits for
+                    // the clients before closing. Otherwise this test takes a
+                    // long time.
+                    client.close();
+
                     app.close(function _close() {
                         t.end();
                     });
@@ -165,6 +171,12 @@ test('http get metrics for missing zone returns 404', function _test(t) {
                 t.equal(err.statusCode, 404, 'error is 404');
                 t.ok(data);
                 t.equal(data, 'container not found');
+
+                // We need to close our client, since the server waits for
+                // the clients before closing. Otherwise this test takes a long
+                // time.
+                client.close();
+
                 app.close(function _close() {
                     t.end();
                 });
@@ -185,6 +197,12 @@ test('http refresh zones succeeds', function _test(t) {
             client.post(refresh_route, function _get(err, req, res, data) {
                 t.notOk(err, 'err is not set');
                 t.notOk(data, 'data is set');
+
+                // We need to close our client, since the server waits for
+                // the clients before closing. Otherwise this test takes a long
+                // time.
+                client.close();
+
                 app.close(function _close() {
                     t.end();
                 });
