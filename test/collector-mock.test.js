@@ -853,7 +853,7 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('61c64afd-6c69-44b3-94fc-bcd17234e268',
                         function _gotMetrics(err, metrics) {
 
@@ -1178,7 +1178,7 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('f0b7e8d8-8f76-46db-b292-6d8124212ea1',
                         function _gotMetrics(err, metrics) {
 
@@ -1271,7 +1271,7 @@ test('collectors-vm/memcap works as expected', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('b55cf19c-4898-4bd1-9169-b89b472d0621',
                         function _gotMetrics(err, metrics) {
 
@@ -1422,7 +1422,7 @@ test('collectors-vm/tcp works as expected', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
                         function _gotMetrics(err, metrics) {
 
@@ -1480,7 +1480,7 @@ test('collectors-vm/zfs works as expected', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('319cb666-4797-4387-83ed-56d865fd25f4',
                         function _gotMetrics(err, metrics) {
 
@@ -1571,7 +1571,7 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('319cb666-4797-4387-83ed-56d865fd25f4',
                         function _gotMetrics(err, metrics) {
 
@@ -1686,7 +1686,7 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
     }, function _collectorCreatedCb(collector) {
         mod_vasync.pipeline({
             funcs: [
-                function getGzArcstats(_, cb) {
+                function getStats(_, cb) {
                     collector.getMetrics('319cb666-4797-4387-83ed-56d865fd25f4',
                         function _gotMetrics(err, metrics) {
 
@@ -1703,6 +1703,173 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/zone_vfs checks should succeed');
+            collector.stop();
+            t.end();
+        });
+    });
+});
+
+test('collectors-vm/cpucap works as expected w/ capped zone',
+function _test(t) {
+    var expectedMetrics;
+    var mockData = {};
+
+    mockData = {
+        'timestamp': 1507667772042,
+        'kstats': [
+            {
+                'class': 'zone_caps',
+                'module': 'caps',
+                'name': 'cpucaps_zone_5',
+                'instance': 5,
+                'snaptime': 812973962481910,
+                'crtime': 81612233297,
+                'data': {
+                    'value': 400,
+                    'baseline': 321,
+                    'effective': 400,
+                    'burst_limit_sec': 0,
+                    'bursting_sec': 0,
+                    'usage': 1,
+                    'nwait': 0,
+                    'below_sec': 812427,
+                    'above_sec': 0,
+                    'above_base_sec': 0,
+                    'maxusage': 89,
+                    'zonename': 'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1'
+                }
+            }
+        ],
+        'vms': {
+            'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1': {
+                'instance': 5,
+                'zfs': {
+                    'avail': 17877601280,
+                    'used': 120375808
+                }
+            }
+        }
+    };
+
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
+    expectedMetrics = [
+        '# HELP cpucap_above_base_seconds_total Time (in seconds) a zone has spent over the baseline',
+        '# TYPE cpucap_above_base_seconds_total counter',
+        'cpucap_above_base_seconds_total 0',
+        '# HELP cpucap_above_seconds_total Time (in seconds) a zone has spent over its cpu_cap',
+        '# TYPE cpucap_above_seconds_total counter',
+        'cpucap_above_seconds_total 0',
+        '# HELP cpucap_baseline_percentage The "normal" CPU utilization expected for a zone with this cpu_cap (percentage of a single CPU)',
+        '# TYPE cpucap_baseline_percentage gauge',
+        'cpucap_baseline_percentage 321',
+        '# HELP cpucap_below_seconds_total Time (in seconds) a zone has spent under its cpu_cap',
+        '# TYPE cpucap_below_seconds_total counter',
+        'cpucap_below_seconds_total 812427',
+        '# HELP cpucap_burst_limit_seconds The limit on the number of seconds a zone can burst over its cpu_cap before the effective cap is lowered to the baseline',
+        '# TYPE cpucap_burst_limit_seconds gauge',
+        'cpucap_burst_limit_seconds 0',
+        '# HELP cpucap_effective_percentage Shows which cap is being used, the baseline value or the burst value',
+        '# TYPE cpucap_effective_percentage gauge',
+        'cpucap_effective_percentage 400',
+        '# HELP cpucap_max_usage_percentage The highest CPU utilization the zone has seen since booting (percentage of a single CPU)',
+        '# TYPE cpucap_max_usage_percentage gauge',
+        'cpucap_max_usage_percentage 89',
+        '# HELP cpucap_waiting_threads_count The number of threads put on the wait queue due to the zone being over its cap',
+        '# TYPE cpucap_waiting_threads_count gauge',
+        'cpucap_waiting_threads_count 0',
+        '# HELP cpucap_cur_usage_percentage Current CPU utilization of the zone (percentage of a single CPU)',
+        '# TYPE cpucap_cur_usage_percentage gauge',
+        'cpucap_cur_usage_percentage 1',
+        '# HELP cpucap_limit_percentage The cpu_cap limit (percentage of a single CPU)',
+        '# TYPE cpucap_limit_percentage gauge',
+        'cpucap_limit_percentage 400'
+    ];
+    /* END JSSTYLED */
+    /* eslint-enable */
+
+    collector_harness.createCollector({
+        enabledCollectors: {
+            'collectors-vm': {
+                'cpucap': true
+            }
+        }, mockData: mockData
+    }, function _collectorCreatedCb(collector) {
+        mod_vasync.pipeline({
+            funcs: [
+                function getStats(_, cb) {
+                    collector.getMetrics('ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
+                        function _gotMetrics(err, metrics) {
+
+                        t.ifError(err, 'getMetrics should succeed for VM');
+                        if (!err) {
+                            t.deepEqual(metrics.trim().split('\n'),
+                                expectedMetrics,
+                                'VM cpucap metrics match expected');
+                        }
+                        cb();
+                    });
+                }
+            ]
+        }, function pipelineCb(err) {
+            t.ifError(err,
+                'all collectors-vm/cpucap checks should succeed');
+            collector.stop();
+            t.end();
+        });
+    });
+});
+
+test('collectors-vm/cpucap works as expected w/ uncapped zone',
+function _test(t) {
+    var expectedMetrics;
+    var mockData = {};
+
+    mockData = {
+        'timestamp': 1507669124075,
+        'kstats': [
+        ],
+        'vms': {
+            '5831aa14-bcf3-4e72-a0b9-1847e80b08e7': {
+                'instance': 28,
+                'zfs': {
+                    'avail': 17866666496,
+                    'used': 166888448
+                }
+            }
+        }
+    };
+
+    expectedMetrics = [
+        ''
+    ];
+
+    collector_harness.createCollector({
+        enabledCollectors: {
+            'collectors-vm': {
+                'cpucap': true
+            }
+        }, mockData: mockData
+    }, function _collectorCreatedCb(collector) {
+        mod_vasync.pipeline({
+            funcs: [
+                function getStats(_, cb) {
+                    collector.getMetrics('5831aa14-bcf3-4e72-a0b9-1847e80b08e7',
+                        function _gotMetrics(err, metrics) {
+
+                        t.ifError(err, 'getMetrics should succeed for VM');
+                        if (!err) {
+                            t.deepEqual(metrics.trim().split('\n'),
+                                expectedMetrics,
+                                'VM cpucap metrics match expected');
+                        }
+                        cb();
+                    });
+                }
+            ]
+        }, function pipelineCb(err) {
+            t.ifError(err,
+                'all collectors-vm/cpucap checks should succeed');
             collector.stop();
             t.end();
         });

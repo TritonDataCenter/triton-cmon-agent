@@ -58,8 +58,6 @@ test('create collector should fail when given invalid opts', function _test(t) {
 });
 
 test('get metrics returns expected metrics for first VM', function _test(t) {
-    t.plan(183);
-
     var collector = new lib_instrumenterCollector({ log: log });
     collector.start(function _afterStarting() {
         collector.refreshZoneCache(function _refresh(refreshErr) {
