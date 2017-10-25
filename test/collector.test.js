@@ -60,42 +60,42 @@ test('create collector should fail when given invalid opts', function _test(t) {
 test('get metrics returns expected metrics for first VM', function _test(t) {
     var collector = new lib_instrumenterCollector({ log: log });
     collector.start(function _afterStarting() {
-        collector.refreshZoneCache(function _refresh(refreshErr) {
-            t.notOk(refreshErr, 'refreshErr should be undefined');
+        var vm_uuid = collector.reader.read({
+            'class': 'zone_misc',
+            module: 'zones'
+        })[1].data.zonename; // index 0 is GZ
 
-            var vm_uuid = Object.keys(collector.zones)[0];
-            collector.getMetrics(vm_uuid, function _get(err, str) {
-                t.notOk(err, 'err should be undefined');
-                t.equal(typeof (str), 'string');
-                var metrics = str.split('\n');
-                var i = 0;
-                while (i < (metrics.length - 2)) {
-                    t.ok(metrics[i++].startsWith('# HELP '),
-                        'has help metadata');
+        collector.getMetrics(vm_uuid, function _get(err, str) {
+            t.notOk(err, 'err should be undefined');
+            t.equal(typeof (str), 'string');
+            var metrics = str.split('\n');
+            var i = 0;
+            while (i < (metrics.length - 2)) {
+                t.ok(metrics[i++].startsWith('# HELP '),
+                    'has help metadata');
 
-                    t.ok(metrics[i].endsWith(' gauge') ||
-                        metrics[i].endsWith(' counter') ||
-                        metrics[i].endsWith(' histogram') ||
-                        metrics[i].endsWith(' summary'),
-                        'ends with a metric type definition');
-                    t.ok(metrics[i++].startsWith('# TYPE '),
-                        'has type metadata');
+                t.ok(metrics[i].endsWith(' gauge') ||
+                    metrics[i].endsWith(' counter') ||
+                    metrics[i].endsWith(' histogram') ||
+                    metrics[i].endsWith(' summary'),
+                    'ends with a metric type definition');
+                t.ok(metrics[i++].startsWith('# TYPE '),
+                    'has type metadata');
 
-                    var metric_parts = metrics[i++].split(' ');
-                    var metric_name = metric_parts[0];
-                    var metric_value = metric_parts[1];
-                    /* BEGIN JSSTYLED */
-                    t.ok(/^[a-zA-Z0-9_{}=\"\"]+$/.test(metric_name),
-                        'metric name contains only name/label characters, ' +
-                        'got: ' + metric_name);
-                    /* END JSSTYLED */
-                    t.ok(Number.isFinite(parseInt(metric_value)) ||
-                        Number.isFinite(parseFloat(metric_value)),
-                        'metric value is finite');
-                }
+                var metric_parts = metrics[i++].split(' ');
+                var metric_name = metric_parts[0];
+                var metric_value = metric_parts[1];
+                /* BEGIN JSSTYLED */
+                t.ok(/^[a-zA-Z0-9_{}=\"\"]+$/.test(metric_name),
+                    'metric name contains only name/label characters, ' +
+                    'got: ' + metric_name);
+                /* END JSSTYLED */
+                t.ok(Number.isFinite(parseInt(metric_value)) ||
+                    Number.isFinite(parseFloat(metric_value)),
+                    'metric value is finite');
+            }
 
-                t.end();
-            });
+            t.end();
         });
     });
 });
@@ -118,21 +118,5 @@ test('get metrics fails when passed invalid VM uuid', function _test(t) {
         }, 'vm_uuid does not exist in zones');
 
         t.end();
-    });
-});
-
-test('refresh zone cache should not explode', function _test(t) {
-    t.plan(3);
-
-    var collector = new lib_instrumenterCollector({ log: log });
-    collector.start(function _afterStarting() {
-        t.doesNotThrow(function _refresh() {
-            collector.refreshZoneCache(function _cb(err) {
-                t.notOk(err, 'err is not defined');
-                t.ok(collector.zones, 'zones is defined');
-
-                t.end();
-            });
-        }, 'refresh zones does not throw');
     });
 });

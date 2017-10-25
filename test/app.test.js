@@ -185,6 +185,12 @@ test('http get metrics for missing zone returns 404', function _test(t) {
     });
 });
 
+/*
+ * Note: refresh no longer actually does anything. This test is left here only
+ * because refresh is in the v1 API and we want to ensure we're still matching
+ * the API. It can be removed once we've decided this no longer needs to be in
+ * the API.
+ */
 test('http refresh zones succeeds', function _test(t) {
     t.plan(2);
 

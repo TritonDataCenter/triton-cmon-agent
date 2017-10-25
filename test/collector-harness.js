@@ -54,33 +54,8 @@ function mockKstatReader(opts) {
     }));
 }
 
+// Dummy, since this endpoint is a NO-OP.
 function mockRefreshZoneCache(callback) {
-    var self = this; // eslint-disable-line
-
-    mod_assert.object(self.mockData, 'self.mockData');
-    mod_assert.optionalObject(self.mockData.vms, 'self.mockData.vms');
-
-    var idx;
-    var keys;
-
-    // when mockdata has no .vms, we'll treat it as empty
-    if (!self.mockData.hasOwnProperty('vms')) {
-        callback();
-        return;
-    }
-
-    keys = Object.keys(self.mockData.vms);
-
-    for (idx = 0; idx < keys.length; idx++) {
-        if (keys[idx] !== 'gz') {
-            mod_assert.number(self.mockData.vms[keys[idx]].instance,
-                'self.mockData.vms.' + keys[idx] + '.instance');
-            self.zones[keys[idx]] = {
-                instance: self.mockData.vms[keys[idx]].instance
-            };
-        }
-    }
-
     callback();
 }
 
@@ -207,6 +182,9 @@ function createCollector(opts, callback) {
     mod_assert.optionalObject(opts.enabledCollectors, 'opts.enabledCollectors');
     mod_assert.optionalObject(opts.mockData, 'opts.mockData');
 
+    var haveVmKstats = {};
+    var kIdx;
+    var kstats;
     var mockCollector;
 
     mockCollector = new lib_instrumenterCollector({ log: log });
@@ -222,6 +200,47 @@ function createCollector(opts, callback) {
         };
 
         mockCollector.mockData = opts.mockData;
+
+        /*
+         * Because we use the kstats to determine whether a VM exists, if
+         * we've specified VMs but haven't provided kstat data, we'll fill
+         * in some fake data here.
+         */
+        if (mockCollector.mockData.kstats === undefined) {
+            mockCollector.mockData.kstats = [];
+        }
+
+
+        // Fill in only the fields of the kstat we need.
+        if (mockCollector.mockData.vms) {
+
+            // Make a map of the VMs we have zone_misc kstats for
+            kstats = mockCollector.mockData.kstats;
+            for (kIdx = 0; kIdx < kstats.length; kIdx++) {
+                if (kstats[kIdx]['class'] === 'zone_misc' &&
+                    kstats[kIdx].module === 'zones') {
+
+                    haveVmKstats[kstats[kIdx].data.zonename] = true;
+                }
+            }
+
+            Object.keys(mockCollector.mockData.vms).forEach(
+                function _mockKey(k) {
+
+                if (!haveVmKstats[k]) {
+                    mockCollector.mockData.kstats.push({
+                        'class': 'zone_misc',
+                        data: {
+                            zonename: k
+                        },
+                        instance: mockCollector.mockData.vms[k].instance,
+                        module: 'zones',
+                        name: k.substr(0, 30)
+                    });
+                }
+            });
+        }
+
     }
 
     mockCollector.start(function _startedCollector() {

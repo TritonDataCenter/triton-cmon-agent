@@ -201,8 +201,8 @@ function loadKstats(vms, kstats, vmKstatRead, gzKstatRead, reader, callback) {
             vmObj = vms[vmKeys[vmIdx]];
 
             getOpts = {
-                vm_instance: vmObj.instance,
-                vm_uuid: vmKeys[vmIdx]
+                instanceId: vmObj.instance,
+                zonename: vmKeys[vmIdx]
             };
 
             kstatQuery = kstat_common.kstatReadOpts(getOpts,

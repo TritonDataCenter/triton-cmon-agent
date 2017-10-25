@@ -38,7 +38,7 @@ test('collectors-common/time works as expected', function _test(t) {
         'time_of_day ' + sampleTimestamp.toString()
     ];
 
-    // add a VM (so we can test loading time from this VM and GZ)
+    // Add a VM (so we can test loading time from this VM and GZ)
     mockData.vms[vmUuid] = {
         instance: 1
     };
