@@ -54,6 +54,20 @@ function mockKstatReader(opts) {
     }));
 }
 
+function mockNtpData(callback) {
+    var self = this; // eslint-disable-line
+
+    mod_assert.object(self.mockData, 'self.mockData');
+
+    if (!self.mockData.hasOwnProperty('ntp')) {
+        // no data, return an empty object
+        callback(null, {});
+        return;
+    }
+
+    callback(null, self.mockData.ntp);
+}
+
 // Dummy, since this endpoint is a NO-OP.
 function mockRefreshZoneCache(callback) {
     callback();
@@ -152,6 +166,17 @@ function filterCollectors(mockCollector, enabledCollectors) {
  *           },
  *           ...
  *        ],
+ *        ntp: {
+ *            peers: {
+ *                ...
+ *            },
+ *            syspeer: {
+ *                ...
+ *            },
+ *            system: {
+ *                ...
+ *            }
+ *        },
  *        timestamp: <timestamp: integer in seconds>,
  *        vms: {
  *            '<VM uuid>': {
@@ -164,8 +189,9 @@ function filterCollectors(mockCollector, enabledCollectors) {
  *        }
  *    }
  *
- * you can then also modify your object between calls to collector.getMetrics()
- * to perform tests on changing values.
+ * though top-level keys may be omitted as appropriate. You can then also modify
+ * your object between calls to collector.getMetrics() to perform tests on
+ * changing values.
  *
  * In addition to the 'mockData' option, it is possible to pass a
  * 'enabledCollectors' option which filters which collectors are enabled
@@ -194,6 +220,7 @@ function createCollector(opts, callback) {
             mockRefreshZoneCache.bind(mockCollector);
         mockCollector.getCurrentTimestamp =
             mockCurrentTimestamp.bind(mockCollector);
+        mockCollector.getNtpData = mockNtpData.bind(mockCollector);
         mockCollector.getZfsUsage = mockZfsUsage.bind(mockCollector);
         mockCollector.reader = {
             read: mockKstatReader.bind(mockCollector)

@@ -246,6 +246,7 @@ function collectData(config, callback) {
     dummyCollector.start(function _onStart() {
         var gzKstatRead = [];
         var kstats = [];
+        var ntpData = {};
         var timestamp = Date.now();
         var vms = {};
         var vmKstatRead = [];
@@ -305,6 +306,17 @@ function collectData(config, callback) {
                 }, function _loadKstats(_, cb) {
                     loadKstats(vms, kstats, vmKstatRead, gzKstatRead,
                         dummyCollector.reader, cb);
+                }, function _addNtpData(_, cb) {
+                    if (!config.include_gz) {
+                        cb();
+                        return;
+                    }
+                    dummyCollector.getNtpData(function _onData(err, data) {
+                        if (!err) {
+                            ntpData = data;
+                        }
+                        cb(err);
+                    });
                 }
             ]
         }, function _afterPipeline(err) {
@@ -320,6 +332,10 @@ function collectData(config, callback) {
 
             if (Object.keys(vms).length > 0) {
                 resultObj.vms = vms;
+            }
+
+            if (Object.keys(ntpData).length > 0) {
+                resultObj.ntp = ntpData;
             }
 
             callback(err, resultObj);
