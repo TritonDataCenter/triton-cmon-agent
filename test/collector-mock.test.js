@@ -19,6 +19,19 @@ var mod_vasync = require('vasync');
 
 var collector_harness = require('./collector-harness');
 
+/*
+ * For test purposes here we don't care about the actual current timings of
+ * the metrics. So this function allows us to make the time 0.0 so that
+ * comparison is possible.
+ */
+function normalizeTimers(metricsStr) {
+    var normalized;
+
+    normalized = metricsStr.replace(/_metrics_timer_seconds [0-9\.]+\n/g,
+         '_metrics_timer_seconds 0.0\n');
+
+    return (normalized);
+}
 
 test('collectors-common/time works as expected', function _test(t) {
     var expectedMetrics;
@@ -32,11 +45,24 @@ test('collectors-common/time works as expected', function _test(t) {
         vms: {}
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP time_metrics_available_boolean Whether time metrics were available, 0 = false, 1 = true',
+        '# TYPE time_metrics_available_boolean gauge',
+        'time_metrics_available_boolean 1',
+        '# HELP time_metrics_cached_boolean Whether time metrics came from cache, 0 = false, 1 = true',
+        '# TYPE time_metrics_cached_boolean gauge',
+        'time_metrics_cached_boolean 0',
+        '# HELP time_metrics_timer_seconds How long it took to gather the time metrics',
+        '# TYPE time_metrics_timer_seconds gauge',
+        'time_metrics_timer_seconds 0.0',
         '# HELP time_of_day System time in seconds since epoch',
         '# TYPE time_of_day counter',
         'time_of_day ' + sampleTimestamp.toString()
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
 
     // Add a VM (so we can test loading time from this VM and GZ)
     mockData.vms[vmUuid] = {
@@ -58,8 +84,8 @@ test('collectors-common/time works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'GZ time metric matches expected');
                         }
                         cb();
@@ -70,8 +96,8 @@ test('collectors-common/time works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics.trim())
+                                .split('\n'), expectedMetrics,
                                 'VM time metric matches expected');
                         }
                         cb();
@@ -200,6 +226,15 @@ test('collectors-gz/arcstats works as expected', function _test(t) {
     /* eslint-disable */
     /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP arcstats_metrics_available_boolean Whether arcstats metrics were available, 0 = false, 1 = true',
+        '# TYPE arcstats_metrics_available_boolean gauge',
+        'arcstats_metrics_available_boolean 1',
+        '# HELP arcstats_metrics_cached_boolean Whether arcstats metrics came from cache, 0 = false, 1 = true',
+        '# TYPE arcstats_metrics_cached_boolean gauge',
+        'arcstats_metrics_cached_boolean 0',
+        '# HELP arcstats_metrics_timer_seconds How long it took to gather the arcstats metrics',
+        '# TYPE arcstats_metrics_timer_seconds gauge',
+        'arcstats_metrics_timer_seconds 0.0',
         '# HELP arcstats_anon_evictable_data_bytes ARC anonymous evictable data',
         '# TYPE arcstats_anon_evictable_data_bytes gauge',
         'arcstats_anon_evictable_data_bytes 0',
@@ -459,8 +494,8 @@ test('collectors-gz/arcstats works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'GZ arcstat metrics match expected');
                         }
                         cb();
@@ -518,14 +553,24 @@ test('collectors-gz/cpu_info works as expected', function _test(t) {
         }],
         timestamp: Date.now() // doesn't actually matter to this test
     };
-    /* END JSSTYLED */
-    /* eslint-enable */
 
     expectedMetrics = [
+        '# HELP cpu_info_metrics_available_boolean Whether cpu_info metrics were available, 0 = false, 1 = true',
+        '# TYPE cpu_info_metrics_available_boolean gauge',
+        'cpu_info_metrics_available_boolean 1',
+        '# HELP cpu_info_metrics_cached_boolean Whether cpu_info metrics came from cache, 0 = false, 1 = true',
+        '# TYPE cpu_info_metrics_cached_boolean gauge',
+        'cpu_info_metrics_cached_boolean 0',
+        '# HELP cpu_info_metrics_timer_seconds How long it took to gather the cpu_info metrics',
+        '# TYPE cpu_info_metrics_timer_seconds gauge',
+        'cpu_info_metrics_timer_seconds 0.0',
         '# HELP cpu_info_model CPU model',
         '# TYPE cpu_info_model gauge',
         'cpu_info_model 158'
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
+
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -537,7 +582,7 @@ test('collectors-gz/cpu_info works as expected', function _test(t) {
         collector.getMetrics('gz', function _gotMetrics(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
-                t.deepEqual(metrics.trim().split('\n'),
+                t.deepEqual(normalizeTimers(metrics).trim().split('\n'),
                     expectedMetrics,
                     'GZ cpu_info metrics match expected');
             }
@@ -825,7 +870,18 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
         }
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP link_metrics_available_boolean Whether link metrics were available, 0 = false, 1 = true',
+        '# TYPE link_metrics_available_boolean gauge',
+        'link_metrics_available_boolean 1',
+        '# HELP link_metrics_cached_boolean Whether link metrics came from cache, 0 = false, 1 = true',
+        '# TYPE link_metrics_cached_boolean gauge',
+        'link_metrics_cached_boolean 0',
+        '# HELP link_metrics_timer_seconds How long it took to gather the link metrics',
+        '# TYPE link_metrics_timer_seconds gauge',
+        'link_metrics_timer_seconds 0.0',
         '# HELP net_agg_packets_in Aggregate inbound packets',
         '# TYPE net_agg_packets_in counter',
         'net_agg_packets_in{interface="vnic0"} 8942538',
@@ -843,6 +899,9 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
         'net_agg_packets_out{interface="vnic1"} 6215',
         'net_agg_bytes_in{interface="vnic1"} 15497110'
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
+
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -859,8 +918,8 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM link metrics match expected');
                         }
                         cb();
@@ -1154,7 +1213,18 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
         }
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP link_metrics_available_boolean Whether link metrics were available, 0 = false, 1 = true',
+        '# TYPE link_metrics_available_boolean gauge',
+        'link_metrics_available_boolean 1',
+        '# HELP link_metrics_cached_boolean Whether link metrics came from cache, 0 = false, 1 = true',
+        '# TYPE link_metrics_cached_boolean gauge',
+        'link_metrics_cached_boolean 0',
+        '# HELP link_metrics_timer_seconds How long it took to gather the link metrics',
+        '# TYPE link_metrics_timer_seconds gauge',
+        'link_metrics_timer_seconds 0.0',
         '# HELP net_agg_packets_in Aggregate inbound packets',
         '# TYPE net_agg_packets_in counter',
         'net_agg_packets_in{interface="vnic0"} 6348522',
@@ -1168,6 +1238,8 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
         '# TYPE net_agg_bytes_in counter',
         'net_agg_bytes_in{interface="vnic0"} 360616500'
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -1184,8 +1256,8 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM link metrics match expected');
                         }
                         cb();
@@ -1244,7 +1316,18 @@ test('collectors-vm/memcap works as expected', function _test(t) {
         }
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP memcap_metrics_available_boolean Whether memcap metrics were available, 0 = false, 1 = true',
+        '# TYPE memcap_metrics_available_boolean gauge',
+        'memcap_metrics_available_boolean 1',
+        '# HELP memcap_metrics_cached_boolean Whether memcap metrics came from cache, 0 = false, 1 = true',
+        '# TYPE memcap_metrics_cached_boolean gauge',
+        'memcap_metrics_cached_boolean 0',
+        '# HELP memcap_metrics_timer_seconds How long it took to gather the memcap metrics',
+        '# TYPE memcap_metrics_timer_seconds gauge',
+        'memcap_metrics_timer_seconds 0.0',
         '# HELP mem_agg_usage Aggregate memory usage in bytes',
         '# TYPE mem_agg_usage gauge',
         'mem_agg_usage 324755456',
@@ -1261,6 +1344,9 @@ test('collectors-vm/memcap works as expected', function _test(t) {
         '# TYPE mem_swap_limit gauge',
         'mem_swap_limit 4294967296'
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
+
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -1277,8 +1363,8 @@ test('collectors-vm/memcap works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM memcap metrics match expected');
                         }
                         cb();
@@ -1379,6 +1465,15 @@ test('collectors-vm/tcp works as expected', function _test(t) {
     /* eslint-disable */
     /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP tcp_metrics_available_boolean Whether tcp metrics were available, 0 = false, 1 = true',
+        '# TYPE tcp_metrics_available_boolean gauge',
+        'tcp_metrics_available_boolean 1',
+        '# HELP tcp_metrics_cached_boolean Whether tcp metrics came from cache, 0 = false, 1 = true',
+        '# TYPE tcp_metrics_cached_boolean gauge',
+        'tcp_metrics_cached_boolean 0',
+        '# HELP tcp_metrics_timer_seconds How long it took to gather the tcp metrics',
+        '# TYPE tcp_metrics_timer_seconds gauge',
+        'tcp_metrics_timer_seconds 0.0',
         '# HELP tcp_failed_connection_attempt_count Failed TCP connection attempts',
         '# TYPE tcp_failed_connection_attempt_count counter',
         'tcp_failed_connection_attempt_count 39',
@@ -1428,8 +1523,8 @@ test('collectors-vm/tcp works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM tcp metrics match expected');
                         }
                         cb();
@@ -1462,7 +1557,18 @@ test('collectors-vm/zfs works as expected', function _test(t) {
         }
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP zfs_metrics_available_boolean Whether zfs metrics were available, 0 = false, 1 = true',
+        '# TYPE zfs_metrics_available_boolean gauge',
+        'zfs_metrics_available_boolean 1',
+        '# HELP zfs_metrics_cached_boolean Whether zfs metrics came from cache, 0 = false, 1 = true',
+        '# TYPE zfs_metrics_cached_boolean gauge',
+        'zfs_metrics_cached_boolean 0',
+        '# HELP zfs_metrics_timer_seconds How long it took to gather the zfs metrics',
+        '# TYPE zfs_metrics_timer_seconds gauge',
+        'zfs_metrics_timer_seconds 0.0',
         '# HELP zfs_available zfs space available in bytes',
         '# TYPE zfs_available gauge',
         'zfs_available 18244200960',
@@ -1470,6 +1576,8 @@ test('collectors-vm/zfs works as expected', function _test(t) {
         '# TYPE zfs_used gauge',
         'zfs_used 3231139328'
     ];
+    /* END JSSTYLED */
+    /* eslint-disable */
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -1486,8 +1594,8 @@ test('collectors-vm/zfs works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM zfs metrics match expected');
                         }
                         cb();
@@ -1547,7 +1655,18 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
         }
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP zone_misc_metrics_available_boolean Whether zone_misc metrics were available, 0 = false, 1 = true',
+        '# TYPE zone_misc_metrics_available_boolean gauge',
+        'zone_misc_metrics_available_boolean 1',
+        '# HELP zone_misc_metrics_cached_boolean Whether zone_misc metrics came from cache, 0 = false, 1 = true',
+        '# TYPE zone_misc_metrics_cached_boolean gauge',
+        'zone_misc_metrics_cached_boolean 0',
+        '# HELP zone_misc_metrics_timer_seconds How long it took to gather the zone_misc metrics',
+        '# TYPE zone_misc_metrics_timer_seconds gauge',
+        'zone_misc_metrics_timer_seconds 0.0',
         '# HELP cpu_user_usage User CPU utilization in nanoseconds',
         '# TYPE cpu_user_usage counter',
         'cpu_user_usage 382258003486',
@@ -1561,6 +1680,8 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
         '# TYPE load_average gauge',
         'load_average 0'
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -1577,8 +1698,8 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM zone_misc metrics match expected');
                         }
                         cb();
@@ -1643,6 +1764,15 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
     /* eslint-disable */
     /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP zone_vfs_metrics_available_boolean Whether zone_vfs metrics were available, 0 = false, 1 = true',
+        '# TYPE zone_vfs_metrics_available_boolean gauge',
+        'zone_vfs_metrics_available_boolean 1',
+        '# HELP zone_vfs_metrics_cached_boolean Whether zone_vfs metrics came from cache, 0 = false, 1 = true',
+        '# TYPE zone_vfs_metrics_cached_boolean gauge',
+        'zone_vfs_metrics_cached_boolean 0',
+        '# HELP zone_vfs_metrics_timer_seconds How long it took to gather the zone_vfs metrics',
+        '# TYPE zone_vfs_metrics_timer_seconds gauge',
+        'zone_vfs_metrics_timer_seconds 0.0',
         '# HELP vfs_bytes_read_count VFS number of bytes read',
         '# TYPE vfs_bytes_read_count counter',
         'vfs_bytes_read_count 106467672',
@@ -1692,8 +1822,8 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM zone_vfs metrics match expected');
                         }
                         cb();
@@ -1754,6 +1884,15 @@ function _test(t) {
     /* eslint-disable */
     /* BEGIN JSSTYLED */
     expectedMetrics = [
+        '# HELP cpucap_metrics_available_boolean Whether cpucap metrics were available, 0 = false, 1 = true',
+        '# TYPE cpucap_metrics_available_boolean gauge',
+        'cpucap_metrics_available_boolean 1',
+        '# HELP cpucap_metrics_cached_boolean Whether cpucap metrics came from cache, 0 = false, 1 = true',
+        '# TYPE cpucap_metrics_cached_boolean gauge',
+        'cpucap_metrics_cached_boolean 0',
+        '# HELP cpucap_metrics_timer_seconds How long it took to gather the cpucap metrics',
+        '# TYPE cpucap_metrics_timer_seconds gauge',
+        'cpucap_metrics_timer_seconds 0.0',
         '# HELP cpucap_above_base_seconds_total Time (in seconds) a zone has spent over the baseline',
         '# TYPE cpucap_above_base_seconds_total counter',
         'cpucap_above_base_seconds_total 0',
@@ -1803,8 +1942,8 @@ function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM cpucap metrics match expected');
                         }
                         cb();
@@ -1840,9 +1979,21 @@ function _test(t) {
         }
     };
 
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
     expectedMetrics = [
-        ''
+        '# HELP cpucap_metrics_available_boolean Whether cpucap metrics were available, 0 = false, 1 = true',
+        '# TYPE cpucap_metrics_available_boolean gauge',
+        'cpucap_metrics_available_boolean 0',
+        '# HELP cpucap_metrics_cached_boolean Whether cpucap metrics came from cache, 0 = false, 1 = true',
+        '# TYPE cpucap_metrics_cached_boolean gauge',
+        'cpucap_metrics_cached_boolean 0',
+        '# HELP cpucap_metrics_timer_seconds How long it took to gather the cpucap metrics',
+        '# TYPE cpucap_metrics_timer_seconds gauge',
+        'cpucap_metrics_timer_seconds 0.0'
     ];
+    /* END JSSTYLED */
+    /* eslint-enable */
 
     collector_harness.createCollector({
         enabledCollectors: {
@@ -1859,8 +2010,8 @@ function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'VM cpucap metrics match expected');
                         }
                         cb();
@@ -2094,6 +2245,12 @@ test('collectors-gz/ntp works as expected', function _test(t) {
         '# HELP ntp_metrics_available_boolean Whether ntp metrics were available, 0 = false, 1 = true',
         '# TYPE ntp_metrics_available_boolean gauge',
         'ntp_metrics_available_boolean 1',
+        '# HELP ntp_metrics_cached_boolean Whether ntp metrics came from cache, 0 = false, 1 = true',
+        '# TYPE ntp_metrics_cached_boolean gauge',
+        'ntp_metrics_cached_boolean 0',
+        '# HELP ntp_metrics_timer_seconds How long it took to gather the ntp metrics',
+        '# TYPE ntp_metrics_timer_seconds gauge',
+        'ntp_metrics_timer_seconds 0.0',
         '# HELP ntp_dropped_packets_total Number of packets dropped on reception',
         '# TYPE ntp_dropped_packets_total counter',
         'ntp_dropped_packets_total 0',
@@ -2435,8 +2592,8 @@ test('collectors-gz/ntp works as expected', function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'GZ ntp metrics match expected');
                         }
                         cb();
@@ -2469,7 +2626,13 @@ function _test(t) {
     expectedMetrics = [
         '# HELP ntp_metrics_available_boolean Whether ntp metrics were available, 0 = false, 1 = true',
         '# TYPE ntp_metrics_available_boolean gauge',
-        'ntp_metrics_available_boolean 0'
+        'ntp_metrics_available_boolean 0',
+        '# HELP ntp_metrics_cached_boolean Whether ntp metrics came from cache, 0 = false, 1 = true',
+        '# TYPE ntp_metrics_cached_boolean gauge',
+        'ntp_metrics_cached_boolean 0',
+        '# HELP ntp_metrics_timer_seconds How long it took to gather the ntp metrics',
+        '# TYPE ntp_metrics_timer_seconds gauge',
+        'ntp_metrics_timer_seconds 0.0'
     ];
     /* END JSSTYLED */
     /* eslint-enable */
@@ -2489,8 +2652,8 @@ function _test(t) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
                         if (!err) {
-                            t.deepEqual(metrics.trim().split('\n'),
-                                expectedMetrics,
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
                                 'GZ ntp metrics match expected');
                         }
                         cb();
