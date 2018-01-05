@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /* Test the collector/metrics pipeline using mocked system responses. */
@@ -18,20 +18,8 @@ var mod_libuuid = require('libuuid');
 var mod_vasync = require('vasync');
 
 var collector_harness = require('./collector-harness');
+var normalizeTimers = collector_harness.normalizeTimers;
 
-/*
- * For test purposes here we don't care about the actual current timings of
- * the metrics. So this function allows us to make the time 0.0 so that
- * comparison is possible.
- */
-function normalizeTimers(metricsStr) {
-    var normalized;
-
-    normalized = metricsStr.replace(/_metrics_timer_seconds [0-9\.]+\n/g,
-         '_metrics_timer_seconds 0.0\n');
-
-    return (normalized);
-}
 
 test('collectors-common/time works as expected', function _test(t) {
     var expectedMetrics;
@@ -69,17 +57,17 @@ test('collectors-common/time works as expected', function _test(t) {
         instance: 1
     };
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-common': {
                 'time': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getGzTime(_, cb) {
-                    collector.getMetrics('gz',
+                    masterCollector.getMetrics('gz',
                         function _gotMetricsCb(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
@@ -91,7 +79,7 @@ test('collectors-common/time works as expected', function _test(t) {
                         cb();
                     });
                 }, function getVmTime(_, cb) {
-                    collector.getMetrics(vmUuid,
+                    masterCollector.getMetrics(vmUuid,
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -103,7 +91,7 @@ test('collectors-common/time works as expected', function _test(t) {
                         cb();
                     });
                 }, function getInvalidVmTime(_, cb) {
-                    collector.getMetrics(invalidVmUuid,
+                    masterCollector.getMetrics(invalidVmUuid,
                         function _gotMetrics(err, metrics) {
 
                         t.ok(err, 'getMetrics should fail for VM');
@@ -116,7 +104,7 @@ test('collectors-common/time works as expected', function _test(t) {
             ]
         }, function pipelineCb(err) {
             t.ifError(err, 'all collectors-common/time checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -479,17 +467,17 @@ test('collectors-gz/arcstats works as expected', function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-gz': {
                 'arcstats': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getGzArcstats(_, cb) {
-                    collector.getMetrics('gz',
+                    masterCollector.getMetrics('gz',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
@@ -504,7 +492,7 @@ test('collectors-gz/arcstats works as expected', function _test(t) {
             ]
         }, function pipelineCb(err) {
             t.ifError(err, 'all collectors-gz/arcstat checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -572,21 +560,21 @@ test('collectors-gz/cpu_info works as expected', function _test(t) {
     /* eslint-enable */
 
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-gz': {
                 'cpu_info': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
-        collector.getMetrics('gz', function _gotMetrics(err, metrics) {
+    }, function _collectorCreatedCb(masterCollector) {
+        masterCollector.getMetrics('gz', function _gotMetrics(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim().split('\n'),
                     expectedMetrics,
                     'GZ cpu_info metrics match expected');
             }
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -903,17 +891,18 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
     /* eslint-enable */
 
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'link': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('61c64afd-6c69-44b3-94fc-bcd17234e268',
+                    masterCollector.getMetrics(
+                        '61c64afd-6c69-44b3-94fc-bcd17234e268',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -929,7 +918,7 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/link checks should succeed w/ 2 vnics');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1241,17 +1230,18 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'link': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('f0b7e8d8-8f76-46db-b292-6d8124212ea1',
+                    masterCollector.getMetrics(
+                        'f0b7e8d8-8f76-46db-b292-6d8124212ea1',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1267,7 +1257,7 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/link checks should succeed w/ 1 vnic');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1348,17 +1338,18 @@ test('collectors-vm/memcap works as expected', function _test(t) {
     /* eslint-enable */
 
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'memcap': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('b55cf19c-4898-4bd1-9169-b89b472d0621',
+                    masterCollector.getMetrics(
+                        'b55cf19c-4898-4bd1-9169-b89b472d0621',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1374,7 +1365,7 @@ test('collectors-vm/memcap works as expected', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/memcap checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1508,17 +1499,18 @@ test('collectors-vm/tcp works as expected', function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'tcp': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
+                    masterCollector.getMetrics(
+                        'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1534,7 +1526,7 @@ test('collectors-vm/tcp works as expected', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/tcp checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1579,17 +1571,18 @@ test('collectors-vm/zfs works as expected', function _test(t) {
     /* END JSSTYLED */
     /* eslint-disable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'zfs': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('319cb666-4797-4387-83ed-56d865fd25f4',
+                    masterCollector.getMetrics(
+                        '319cb666-4797-4387-83ed-56d865fd25f4',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1605,7 +1598,7 @@ test('collectors-vm/zfs works as expected', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/zfs checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1683,17 +1676,18 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'zone_misc': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('319cb666-4797-4387-83ed-56d865fd25f4',
+                    masterCollector.getMetrics(
+                        '319cb666-4797-4387-83ed-56d865fd25f4',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1709,7 +1703,7 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/zone_misc checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1807,17 +1801,18 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'zone_vfs': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('319cb666-4797-4387-83ed-56d865fd25f4',
+                    masterCollector.getMetrics(
+                        '319cb666-4797-4387-83ed-56d865fd25f4',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1833,7 +1828,7 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/zone_vfs checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1927,17 +1922,18 @@ function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'cpucap': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
+                    masterCollector.getMetrics(
+                        'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -1953,7 +1949,7 @@ function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/cpucap checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -1995,17 +1991,18 @@ function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-vm': {
                 'cpucap': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    collector.getMetrics('5831aa14-bcf3-4e72-a0b9-1847e80b08e7',
+                    masterCollector.getMetrics(
+                        '5831aa14-bcf3-4e72-a0b9-1847e80b08e7',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -2021,7 +2018,7 @@ function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err,
                 'all collectors-vm/cpucap checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -2577,17 +2574,17 @@ test('collectors-gz/ntp works as expected', function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-gz': {
                 'ntp': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getNtpData(_, cb) {
-                    collector.getMetrics('gz',
+                    masterCollector.getMetrics('gz',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
@@ -2602,7 +2599,7 @@ test('collectors-gz/ntp works as expected', function _test(t) {
             ]
         }, function pipelineCb(err) {
             t.ifError(err, 'all collectors-gz/ntp checks should succeed');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });
@@ -2637,17 +2634,17 @@ function _test(t) {
     /* END JSSTYLED */
     /* eslint-enable */
 
-    collector_harness.createCollector({
+    collector_harness.createMasterCollector({
         enabledCollectors: {
             'collectors-gz': {
                 'ntp': true
             }
         }, mockData: mockData
-    }, function _collectorCreatedCb(collector) {
+    }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.pipeline({
             funcs: [
                 function getNtpData(_, cb) {
-                    collector.getMetrics('gz',
+                    masterCollector.getMetrics('gz',
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
@@ -2663,7 +2660,7 @@ function _test(t) {
         }, function pipelineCb(err) {
             t.ifError(err, 'collectors-gz/ntp should work when ntpd is ' +
                 'unavailable');
-            collector.stop();
+            masterCollector.stop();
             t.end();
         });
     });

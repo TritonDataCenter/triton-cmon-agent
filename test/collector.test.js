@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /* Test the Metric Agent endpoints */
@@ -95,7 +95,9 @@ test('get metrics returns expected metrics for first VM', function _test(t) {
                     'metric value is finite');
             }
 
-            t.end();
+            collector.stop(function _onStop() {
+                t.end();
+            });
         });
     });
 });
@@ -110,10 +112,12 @@ test('get metrics fails when passed invalid VM uuid', function _test(t) {
         }, 'vm_uuid');
         t.doesNotThrow(function _notExist() {
             var bad_uuid = mod_libuuid.create();
+
             collector.getMetrics(bad_uuid, function _noop(err, metrics) {
                 t.ok(err, 'err is set');
                 t.equal(err.code, 'ENOTFOUND', 'error should be ENOTFOUND');
                 t.notOk(metrics, 'metrics is not set');
+                collector.stop();
             });
         }, 'vm_uuid does not exist in zones');
 

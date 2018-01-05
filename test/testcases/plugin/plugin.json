@@ -1,0 +1,10 @@
+{
+    "plugin0": {
+        "timeout": 100,
+        "ttl": 60
+    },
+    "plugin1.sh": {
+        "timeout": 50,
+        "ttl": 30
+    }
+}

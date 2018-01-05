@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /* Test the Metric Agent endpoints */
@@ -13,7 +13,7 @@
 var mod_assert = require('assert-plus');
 var mod_bunyan = require('bunyan');
 
-var lib_instrumenterCollector = require('../lib/instrumenter/collector');
+var lib_master_collector = require('../lib/instrumenter/collector');
 
 var log = mod_bunyan.createLogger({
     name: 'collector_test',
@@ -204,7 +204,7 @@ function filterCollectors(mockCollector, enabledCollectors) {
  *    that just monotonically increments) if this seems useful.
  *
  */
-function createCollector(opts, callback) {
+function createMasterCollector(opts, callback) {
     mod_assert.optionalObject(opts.enabledCollectors, 'opts.enabledCollectors');
     mod_assert.optionalObject(opts.mockData, 'opts.mockData');
 
@@ -213,7 +213,7 @@ function createCollector(opts, callback) {
     var kstats;
     var mockCollector;
 
-    mockCollector = new lib_instrumenterCollector({ log: log });
+    mockCollector = new lib_master_collector({ log: log });
 
     if (opts.mockData) {
         mockCollector.refreshZoneCache =
@@ -227,6 +227,7 @@ function createCollector(opts, callback) {
         };
 
         mockCollector.mockData = opts.mockData;
+        mockCollector.pluginOpts = opts.pluginOpts || {};
 
         /*
          * Because we use the kstats to determine whether a VM exists, if
@@ -279,6 +280,21 @@ function createCollector(opts, callback) {
     });
 }
 
+/*
+ * For test purposes here we don't care about the actual current timings of
+ * the metrics. So this function allows us to make the time 0.0 so that
+ * comparison is possible.
+ */
+function normalizeTimers(metricsStr) {
+    var normalized;
+
+    normalized = metricsStr.replace(/_metrics_timer_seconds [0-9\.]+\n/g,
+         '_metrics_timer_seconds 0.0\n');
+
+    return (normalized);
+}
+
 module.exports = {
-    createCollector: createCollector
+    createMasterCollector: createMasterCollector,
+    normalizeTimers: normalizeTimers
 };

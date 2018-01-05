@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /* Test the Metric Agent app */
@@ -58,7 +58,9 @@ test('create app succeeds', function _test(t) {
 
     t.ok(app.server, 'app.server');
 
-    t.end();
+    app.close(function _onClose() {
+        t.end();
+    });
 });
 
 test('create app fails with bad or no opts', function _test(t) {
