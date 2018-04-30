@@ -1,7 +1,7 @@
 {
   "name": "cmon-agent",
   "description": "Triton Container Monitor Agent",
-  "version": "1.9.2",
+  "version": "1.10.0",
   "author": "Joyent (joyent.com)",
   "repository": {
     "type": "git",

@@ -13,6 +13,8 @@ var mod_bunyan = require('bunyan');
 var mod_forkexec = require('forkexec');
 var mod_restify = require('restify');
 var mod_vasync = require('vasync');
+var fmt = require('util').format;
+
 
 var App = require('../lib/app');
 var VError = require('verror').VError;
@@ -110,9 +112,12 @@ function main() {
 }
 
 function firstAdminIp(sysinfo) {
-    var interfaces;
+    var interfaces = sysinfo['Network Interfaces'];
+    var admin_tag = 'admin';
 
-    interfaces = sysinfo['Network Interfaces'];
+    if (sysinfo['Admin NIC Tag']) {
+        admin_tag = sysinfo['Admin NIC Tag'];
+    }
 
     for (var iface in interfaces) {
         if (!interfaces.hasOwnProperty(iface)) {
@@ -120,14 +125,14 @@ function firstAdminIp(sysinfo) {
         }
 
         var nic = interfaces[iface]['NIC Names'];
-        var isAdmin = nic.indexOf('admin') !== -1;
+        var isAdmin = nic.indexOf(admin_tag) !== -1;
         if (isAdmin) {
             var ip = interfaces[iface].ip4addr;
             return ip;
         }
     }
 
-    throw new Error('No NICs with name "admin" detected.');
+    throw new Error(fmt('No NICs with name "%s" detected.', admin_tag));
 }
 
 main();
