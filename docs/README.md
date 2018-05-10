@@ -359,7 +359,12 @@ zonename will be `global`.
 Plugins should output only metrics to stdout. Any data written to stderr will be
 written to the cmon-agent logs at bunyan's debug level.
 
-The metric output should contain only lines with 3 or 4 tab-separated fields.
+If the plugin file name contains `.prom`, the metric output should contain only lines
+in the Prometheus [v0.0.4 format](https://github.com/prometheus/docs/blob/master/content/docs/instrumenting/exposition_formats.md#format-version-004).
+As per the spec, "# TYPE" lines are required and "# HELP" lines are optional.
+
+If the plugin file name does not contain `.prom`, the metric output should contain
+only lines with 3 or 4 tab-separated fields.
 The order of these fields is:
 
  * metric name
@@ -417,9 +422,19 @@ where ttl is a number of seconds, and timeout is a number of milliseconds. This
 file will be reloaded for each non-cached plugin metric collection.
 
 For TTL, there's one additional way to set a value for a given plugin, and that
-is through a special metric. If your plugin includes a metric of type "option"
-(as opposed to gauge or counter) with the name "ttl", the value will be set as
-the TTL for your plugin. If your output contains multiple values like:
+is through a special metric.
+
+If the plugin's output is Prometheus formatted, then the output can begin with
+an option line in the following format:
+```
+# OPTION ttl <ttl in seconds>
+...
+```
+
+If the plugin is not Prometheus formatted and if the plugin includes a metric
+of type "option" (as opposed to gauge or counter) with the name "ttl", the
+value will be set as the TTL for the plugin.
+If the output contains multiple values like:
 
 ```
 ...
@@ -430,15 +445,15 @@ ttl	option	100
 
 Only the last value will be used. Any help text will be ignored for these
 options. Note also that the only supported `option` is `ttl`. You cannot set the
-`timeout` value via the output of your plugin.
+`timeout` value via the output of the plugin.
 
 ## Important Plugin Restrictions
 
  * If a plugin runs longer than its timeout, it will be killed.
- * If a plugin outputs more than `PLUGIN_MAX_OUTPUT` (10KiB currently) it will be killed.
+ * If a plugin outputs more than `PLUGIN_MAX_OUTPUT` (500KiB currently) it will be killed.
  * If a plugin is not owned by root, it will not run.
  * If the plugin directory is now owned by root, plugins will not be loaded.
- * If the help text is missing (there are only 3 instead of 4 fields) the metric name will be used as the help text.
+ * If the help text is missing (there are only 3 instead of 4 fields) in a non-Prometheus metric or the "# HELP" line is missing in a Prometheus formatted metric, the metric name will be used as the help text.
  * Plugins can cause delays for non-cached results.
  * It is up to the creator of the plugin to follow or not follow the prometheus naming guidelines: https://prometheus.io/docs/practices/naming/
  * cmon-agent makes an attempt to prevent plugins from breaking it or the system, but it's still easy for plugins to do bad things, and they run as root.
