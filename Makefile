@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright 2017 Joyent, Inc.
+# Copyright 2018 Joyent, Inc.
 #
 
 #
@@ -40,7 +40,7 @@ ESLINT_FILES	= $(JS_FILES)
 # SMF_MANIFESTS_IN = smf/manifests/cmon-agent.xml.in
 
 # Should be the same version as the platform's /usr/node/bin/node.
-NODE_PREBUILT_VERSION =	v4.6.0
+NODE_PREBUILT_VERSION =	v4.9.0
 NODE_PREBUILT_TAG =	gz
 ifeq ($(shell uname -s),SunOS)
 NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
