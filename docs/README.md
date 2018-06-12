@@ -447,6 +447,25 @@ Only the last value will be used. Any help text will be ignored for these
 options. Note also that the only supported `option` is `ttl`. You cannot set the
 `timeout` value via the output of the plugin.
 
+It is also possible to add a `vms` property for a plugin in plugin.json. This
+could look like:
+
+```
+{
+    "cnapi": {
+        "timeout": 7000,
+        "ttl": 30,
+        "vms": [
+            "6557450a-4bff-424e-83ca-da45535ae349"
+        ]
+    }
+}
+```
+
+What this does, is restrict the running of this plugin so that it only runs for
+the VMs listed in the array. In this case the `cnapi` plugin will only run for
+the VM with UUID 6557450a-4bff-424e-83ca-da45535ae349.
+
 ## Important Plugin Restrictions
 
  * If a plugin runs longer than its timeout, it will be killed.
