@@ -90,6 +90,26 @@ function mockZfsUsage(vm_uuid, callback) {
     callback(null, self.mockData.vms[vm_uuid].zfs);
 }
 
+function mockTritonMetadata(_, callback) {
+    var self = this; // eslint-disable-line
+
+    mod_assert.object(self.mockData, 'self.mockData');
+    mod_assert.object(self.mockData.tritonMetadata,
+        'self.mockData.tritonMetadata');
+
+    callback(null, self.mockData.tritonMetadata);
+}
+
+function mockTritonMetrics(_, callback) {
+    var self = this; // eslint-disable-line
+
+    mod_assert.object(self.mockData, 'self.mockData');
+    mod_assert.array(self.mockData.tritonMetrics,
+        'self.mockData.tritonMetrics');
+
+    callback(null, self.mockData.tritonMetrics);
+}
+
 function filterCollectors(mockCollector, enabledCollectors) {
     var col;
     var colIdx;
@@ -213,7 +233,10 @@ function createMasterCollector(opts, callback) {
     var kstats;
     var mockCollector;
 
-    mockCollector = new lib_master_collector({ log: log });
+    mockCollector = new lib_master_collector({
+        log: log,
+        adminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
+    });
 
     if (opts.mockData) {
         mockCollector.refreshZoneCache =
@@ -221,6 +244,10 @@ function createMasterCollector(opts, callback) {
         mockCollector.getCurrentTimestamp =
             mockCurrentTimestamp.bind(mockCollector);
         mockCollector.getNtpData = mockNtpData.bind(mockCollector);
+        mockCollector.getTritonMetadata =
+            mockTritonMetadata.bind(mockCollector);
+        mockCollector.getTritonMetrics =
+            mockTritonMetrics.bind(mockCollector);
         mockCollector.getZfsUsage = mockZfsUsage.bind(mockCollector);
         mockCollector.reader = {
             read: mockKstatReader.bind(mockCollector)

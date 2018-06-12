@@ -25,12 +25,17 @@ var log = mod_bunyan.createLogger(
         stream: process.stderr
     });
 
+var DEFAULT_OPTS = {
+    log: log,
+    adminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
+};
+
 test('create collector should work with valid opts', function _test(t) {
     t.plan(5);
 
     var collector;
     t.doesNotThrow(function _create() {
-        collector = new lib_instrumenterCollector({ log: log });
+        collector = new lib_instrumenterCollector(DEFAULT_OPTS);
     }, 'create instrumenter does not throw an exception');
 
     t.ok(collector, 'collector is defined');
@@ -42,7 +47,7 @@ test('create collector should work with valid opts', function _test(t) {
 });
 
 test('create collector should fail when given invalid opts', function _test(t) {
-    t.plan(3);
+    t.plan(4);
 
     var collector;
     t.throws(function _create() {
@@ -51,6 +56,9 @@ test('create collector should fail when given invalid opts', function _test(t) {
     t.throws(function _create() {
         collector = new lib_instrumenterCollector({ log: 1 });
     }, 'opts.log');
+    t.throws(function _create() {
+        collector = new lib_instrumenterCollector({ log: log });
+    }, 'opts.adminUuid');
 
     t.notOk(collector, 'collector is not defined');
 
@@ -58,7 +66,7 @@ test('create collector should fail when given invalid opts', function _test(t) {
 });
 
 test('get metrics returns expected metrics for first VM', function _test(t) {
-    var collector = new lib_instrumenterCollector({ log: log });
+    var collector = new lib_instrumenterCollector(DEFAULT_OPTS);
     collector.start(function _afterStarting() {
         var vm_uuid = collector.reader.read({
             'class': 'zone_misc',
@@ -105,7 +113,7 @@ test('get metrics returns expected metrics for first VM', function _test(t) {
 test('get metrics fails when passed invalid VM uuid', function _test(t) {
     t.plan(5);
 
-    var collector = new lib_instrumenterCollector({ log: log });
+    var collector = new lib_instrumenterCollector(DEFAULT_OPTS);
     collector.start(function _afterStarting() {
         t.throws(function _nonUuid() {
             collector.getMetrics(42, function _noop() {});

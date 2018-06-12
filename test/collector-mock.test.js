@@ -2024,6 +2024,201 @@ function _test(t) {
     });
 });
 
+test('collectors-vm/triton_core works as expected w/ core zone',
+function _test(t) {
+    var expectedMetrics;
+    var mockData = {};
+
+    mockData = {
+        'vms': {
+            '319cb666-4797-4387-83ed-56d865fd25f4': {
+                'instance': 1
+            }
+        },
+        'kstats': [],
+        'tritonMetadata': {isCore: true},
+        'tritonMetrics': [
+            '# HELP http_requests_completed count of requests completed\n' +
+            '# TYPE http_requests_completed counter\n' +
+            'http_requests_completed{service="cloudapi", port="8881"} 42\n',
+            '# HELP http_requests_completed count of requests completed\n' +
+            '# TYPE http_requests_completed counter\n' +
+            'http_requests_completed{service="cloudapi", port="8882"} 21\n'
+        ]
+    };
+
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
+    expectedMetrics = [
+        '# HELP triton_core_metrics_available_boolean Whether triton_core metrics were available, 0 = false, 1 = true',
+        '# TYPE triton_core_metrics_available_boolean gauge',
+        'triton_core_metrics_available_boolean 1',
+        '# HELP triton_core_metrics_cached_boolean Whether triton_core metrics came from cache, 0 = false, 1 = true',
+        '# TYPE triton_core_metrics_cached_boolean gauge',
+        'triton_core_metrics_cached_boolean 0',
+        '# HELP triton_core_metrics_timer_seconds How long it took to gather the triton_core metrics',
+        '# TYPE triton_core_metrics_timer_seconds gauge',
+        'triton_core_metrics_timer_seconds 0.0',
+        '# HELP http_requests_completed count of requests completed',
+        '# TYPE http_requests_completed counter',
+        'http_requests_completed{service="cloudapi", port="8881"} 42',
+        'http_requests_completed{service="cloudapi", port="8882"} 21'
+    ];
+    /* END JSSTYLED */
+    /* eslint-enable */
+
+    collector_harness.createMasterCollector({
+        enabledCollectors: {
+            'collectors-vm': {
+                'triton_core': true
+            }
+        }, mockData: mockData
+    }, function _collectorCreatedCb(masterCollector) {
+        mod_vasync.pipeline({
+            funcs: [
+                function getMetrics(_, cb) {
+                    masterCollector.getMetrics(
+                        '319cb666-4797-4387-83ed-56d865fd25f4',
+                        function _gotMetrics(err, metrics) {
+
+                        t.ifError(err, 'getMetrics should succeed for VM');
+                        if (!err) {
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
+                            'VM triton core metrics match expected');
+                        }
+                        cb();
+                    });
+                }
+            ]
+        }, function pipelineCb(err) {
+            t.ifError(err,
+                'all collectors-vm/triton_core checks should succeed');
+            masterCollector.stop();
+            t.end();
+        });
+    });
+});
+
+
+test('collectors-vm/triton_core works as expected w/ core zone w/o metricPorts',
+function _test(t) {
+    var expectedMetrics;
+    var mockData = {};
+
+    mockData = {
+        'vms': {
+            '319cb666-4797-4387-83ed-56d865fd25f4': {
+                'instance': 1
+            }
+        },
+        'kstats': [],
+        'tritonMetadata': {isCore: true},
+        'tritonMetrics': []
+    };
+
+    /* eslint-disable */
+    /* BEGIN JSSTYLED */
+    expectedMetrics = [
+        '# HELP triton_core_metrics_available_boolean Whether triton_core metrics were available, 0 = false, 1 = true',
+        '# TYPE triton_core_metrics_available_boolean gauge',
+        'triton_core_metrics_available_boolean 0',
+        '# HELP triton_core_metrics_cached_boolean Whether triton_core metrics came from cache, 0 = false, 1 = true',
+        '# TYPE triton_core_metrics_cached_boolean gauge',
+        'triton_core_metrics_cached_boolean 0',
+        '# HELP triton_core_metrics_timer_seconds How long it took to gather the triton_core metrics',
+        '# TYPE triton_core_metrics_timer_seconds gauge',
+        'triton_core_metrics_timer_seconds 0.0',
+    ];
+    /* END JSSTYLED */
+    /* eslint-enable */
+
+    collector_harness.createMasterCollector({
+        enabledCollectors: {
+            'collectors-vm': {
+                'triton_core': true
+            }
+        }, mockData: mockData
+    }, function _collectorCreatedCb(masterCollector) {
+        mod_vasync.pipeline({
+            funcs: [
+                function getMetrics(_, cb) {
+                    masterCollector.getMetrics(
+                        '319cb666-4797-4387-83ed-56d865fd25f4',
+                        function _gotMetrics(err, metrics) {
+
+                        t.ifError(err, 'getMetrics should succeed for VM');
+                        if (!err) {
+                            t.deepEqual(normalizeTimers(metrics).trim()
+                                .split('\n'), expectedMetrics,
+                            'VM triton core metrics match expected');
+                        }
+                        cb();
+                    });
+                }
+            ]
+        }, function pipelineCb(err) {
+            t.ifError(err,
+                'all collectors-vm/triton_core checks should succeed');
+            masterCollector.stop();
+            t.end();
+        });
+    });
+
+});
+
+test('collectors-vm/triton_core works as expected w/ non-core zone',
+function _test(t) {
+    var expectedMetrics;
+    var mockData = {};
+
+    mockData = {
+        'vms': {
+            '319cb666-4797-4387-83ed-56d865fd25f4': {
+                'instance': 1
+            }
+        },
+        'kstats': [],
+        'tritonMetadata': {isCore: false},
+        'tritonMetrics': []
+    };
+
+    expectedMetrics = '';
+
+    collector_harness.createMasterCollector({
+        enabledCollectors: {
+            'collectors-vm': {
+                'triton_core': true
+            }
+        }, mockData: mockData
+    }, function _collectorCreatedCb(masterCollector) {
+        mod_vasync.pipeline({
+            funcs: [
+                function getMetrics(_, cb) {
+                    masterCollector.getMetrics(
+                        '319cb666-4797-4387-83ed-56d865fd25f4',
+                        function _gotMetrics(err, metrics) {
+
+                        t.ifError(err, 'getMetrics should succeed for VM');
+                        if (!err) {
+                            t.equal(metrics, expectedMetrics,
+                            'VM triton core metrics match expected');
+                        }
+                        cb();
+                    });
+                }
+            ]
+        }, function pipelineCb(err) {
+            t.ifError(err,
+                'all collectors-vm/triton_core checks should succeed');
+            masterCollector.stop();
+            t.end();
+        });
+    });
+
+});
+
+
 test('collectors-gz/ntp works as expected', function _test(t) {
     var expectedMetrics;
     var mockData = {};

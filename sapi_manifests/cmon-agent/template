@@ -1,5 +1,6 @@
 {
     "logLevel": "debug",
     "port": 9163,
-    "ip": "127.0.0.1"
+    "ip": "127.0.0.1",
+    "ufdsAdminUuid": "{{{ufds_admin_uuid}}}"
 }

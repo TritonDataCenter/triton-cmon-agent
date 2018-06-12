@@ -28,7 +28,8 @@ var log = mod_bunyan.createLogger({
 
 var DEFAULT_CONFIG = {
     logLevel: 'fatal',
-    port: 9090 /* 9090 chosen to not conflict with a running cmon-agent */
+    port: 9090, /* 9090 chosen to not conflict with a running cmon-agent */
+    ufdsAdminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
 };
 
 var DEFAULT_OPTS = { config: DEFAULT_CONFIG, log: log, ip: '127.0.0.1' };
@@ -66,7 +67,7 @@ test('create app succeeds', function _test(t) {
 test('create app fails with bad or no opts', function _test(t) {
     var app;
 
-    t.plan(11);
+    t.plan(12);
 
     t.throws(function _noOpts() {
         app = new lib_app();
@@ -86,6 +87,9 @@ test('create app fails with bad or no opts', function _test(t) {
     t.throws(function _badPort() {
         app = new lib_app({ config: { logLevel: 'DEBUG', port: 'abc' } });
     }, 'opts.config.port');
+    t.throws(function _noUfdsAdminUuid() {
+        app = new lib_app({ config: { logLevel: 'DEBUG', port: 8080 } });
+    }, 'opts.config.ufdsAdminUuid');
     t.throws(function _noLog() {
         app = new lib_app({ config: DEFAULT_CONFIG });
     }, 'opts.log');
