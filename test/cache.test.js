@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /* Test the Metric Agent cache */
@@ -37,7 +37,8 @@ test('create cache', function _test(t) {
     t.equal(typeof (cache), 'object', 'is object');
     t.ok(cache._items, 'has items object');
     t.equal(Object.keys(cache._items).length, 0, 'no items');
-    t.equal(Object.keys(cache._expiresKeys).length, 0, 'no expiresKeys');
+    t.equal(Object.keys(cache._recentlyUsedKeys).length, 0,
+        'no recentlyUsedKeys');
     t.equal(cache._log, log, 'log is equal to opts log value');
 
     t.end();
@@ -221,6 +222,76 @@ test('remove invalid key type', function _test(t) {
 
     t.notOk(result, 'result should not be set');
     t.notOk(error, 'error should not be set');
+
+    t.end();
+});
+
+test('multiple inserts result in 1 recentlyUsedKeys entry', function _test(t) {
+    t.plan(3);
+
+    var cache = new lib_cache({ log: log });
+    var idx;
+    var ttlString = (TEST_TTL_SECONDS * 1000).toString();
+
+    t.doesNotThrow(function _testInsert() {
+        for (idx = 0; idx < 10; idx++) {
+            cache.insert('dummy', { value: idx }, TEST_TTL_SECONDS);
+        }
+    });
+    t.deepEqual(cache._recentlyUsedKeys[ttlString].length, 1,
+        'should only have last insert in recentlyUsedKeys');
+    t.equal(cache._recentlyUsedKeys[ttlString][0], 'dummy',
+        'should only have dummy');
+
+    t.end();
+});
+
+test('sweep removes stale entries', function _test(t) {
+    t.plan(8);
+
+    var cache = new lib_cache({ log: log });
+    var start = Date.now();
+
+    t.doesNotThrow(function _testInsert() {
+        /* Insert an entry that expires at 10 seconds past start */
+        cache.insert('expireIn10a', { foo: 'bar' }, 10, { now: start });
+        /* Insert an entry that expires at 10 seconds past start + 2s */
+        cache.insert('expireIn10b', { foo: 'bar' }, 10,
+            { now: start + 2000 });
+        /* Insert an entry that expires at 10 seconds past start + 5s */
+        cache.insert('expireIn10c', { foo: 'bar' }, 10,
+            { now: start + 5000 });
+    });
+
+    /*
+     * At this point the 10000 bucket should have 3 cache entries:
+     *
+     *     one that expires at start +10s
+     *     one that expires at start +12s
+     *     one that expires at start +15s
+     *
+     * we'll now simulate a sweep happening at start +13s. That should remove
+     * the first two entries and leave only the last.
+     *
+     */
+
+    t.equal(cache._recentlyUsedKeys['10000'].length, 3,
+        'should have all 3 keys in _recentlyUsedKeys');
+    t.equal(Object.keys(cache._items).length, 3,
+        'should have all 3 keys in _items');
+
+    t.doesNotThrow(function _testSweep() {
+        cache._sweep({ now: start + 13000 });
+    });
+
+    t.equal(cache._recentlyUsedKeys['10000'].length, 1,
+        'should have 1 key in _recentlyUsedKeys');
+    t.equal(Object.keys(cache._items).length, 1,
+        'should have 1 key in _items');
+    t.equal(cache._recentlyUsedKeys['10000'][0], 'expireIn10c',
+        'non-expired entry should remain in _recentlyUsedKeys["10000"]');
+    t.equal(Object.keys(cache._items)[0], 'expireIn10c',
+        'non-expired entry should remain in _items');
 
     t.end();
 });
