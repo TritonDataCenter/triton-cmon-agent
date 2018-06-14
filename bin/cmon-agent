@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 'use strict';
 
 var mod_assert = require('assert-plus');
 var mod_bunyan = require('bunyan');
-var mod_fs = require('fs');
+var mod_forkexec = require('forkexec');
 var mod_restify = require('restify');
 var mod_vasync = require('vasync');
 
@@ -18,7 +18,6 @@ var App = require('../lib/app');
 var VError = require('verror').VError;
 var tritonConfig = require('../lib/triton-config');
 
-var CONFIG_PATH = '/opt/smartdc/agents/etc/cmon-agent.config.json';
 var DEFAULT_CONFIG = {
     logLevel: 'debug',
     port: 9163
@@ -32,22 +31,23 @@ var log = mod_bunyan.createLogger({
 function loadConfig(cb) {
     mod_assert.func(cb, 'cb');
 
-    log.debug({CONFIG_PATH: CONFIG_PATH}, 'loadConfig');
-    mod_fs.readFile(CONFIG_PATH, {encoding: 'utf8'},
-        function _readFile(err, data) {
-            if (err && err.code === 'ENOENT') {
-                log.error({confErr: err}, 'Config is missing, using defaults');
-                cb(null, DEFAULT_CONFIG);
-            } else if (err) {
-                cb(err);
-            } else {
-                try {
-                    cb(null, JSON.parse(data));
-                } catch (parseErr) {
-                    cb(VError(parseErr, 'could not parse ' + CONFIG_PATH));
-                }
-            }
-        });
+    var config = DEFAULT_CONFIG;
+
+    mod_forkexec.forkExecWait({
+        argv: ['/usr/bin/bash', '/lib/sdc/config.sh', '-json']
+    }, function _onForkWaited(err, info) {
+        if (err) {
+            return cb(err);
+        }
+
+        try {
+            config.ufdsAdminUuid = JSON.parse(info.stdout)
+                .ufds_admin_uuid;
+            cb(null, config);
+        } catch (parseErr) {
+            cb(new VError(parseErr, 'could not parse sdc config'));
+        }
+    });
 }
 
 function main() {
