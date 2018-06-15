@@ -32,7 +32,15 @@ var DEFAULT_CONFIG = {
     ufdsAdminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
 };
 
-var DEFAULT_OPTS = { config: DEFAULT_CONFIG, log: log, ip: '127.0.0.1' };
+var DEFAULT_OPTS = {
+    config: DEFAULT_CONFIG,
+    log: log,
+    ip: '127.0.0.1',
+    sysinfo: {
+        'Datacenter Name': 'cmon-agent-tests',
+        UUID: '4f534c64-703e-11e8-8e83-f7ff376a4ae7'
+    }
+};
 
 var DEFAULT_ENDPOINT = 'http://' + DEFAULT_OPTS.ip + ':' + DEFAULT_CONFIG.port;
 
