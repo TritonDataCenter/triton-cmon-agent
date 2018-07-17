@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright 2017 Joyent, Inc.
+# Copyright 2018 Joyent, Inc.
 #
 
 if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
@@ -182,64 +182,6 @@ function adopt_instance
 }
 
 #
-# The "config-agent" service reads configuration from JSON-formatted files in a
-# well-known local directory.  These configuration files tell "config-agent"
-# where to find local SAPI manifests describing the configuration for this
-# agent.
-#
-function add_config_agent_instance
-{
-    local instance_uuid="${1}"
-    local config_etc_dir="${ETC_DIR}/config-agent.d"
-    local agent_json="${config_etc_dir}/${AGENT}.json"
-    local data
-
-    if [[ -z "${instance_uuid}" ]]; then
-        fatal 'must pass in instance_uuid'
-    fi
-
-    mkdir -p "$config_etc_dir"
-
-    data="{
-        \"instance\": \"${instance_uuid}\",
-        \"localManifestDirs\": [
-            \"${ROOT}\"
-        ]
-    }"
-    if ! printf '%s' "${data}" | json >"${agent_json}"; then
-        fatal 'could not write configuration for "config-agent" (%s)' \
-          "${agent_json}"
-    fi
-
-    return 0
-}
-
-#
-# If there is an installed, running, instance of "config-agent", then restart
-# it now.  This ensures that config-agent will notice the addition of any local
-# manifests that we just installed.
-#
-function config_agent_restart
-{
-    local fmri='svc:/smartdc/application/config-agent:default'
-    local smf_state
-
-    if ! smf_state="$(svcs -H -o sta "${fmri}")"; then
-        printf 'No "config-agent" detected.  Skipping restart.\n' >&2
-        return 0
-    fi
-
-    printf '"config-agent" detected in state "%s", posting restart.\n' \
-      "${smf_state}" >&2
-
-    if ! /usr/sbin/svcadm restart "${fmri}"; then
-        fatal 'could not restart config-agent instance'
-    fi
-
-    return 0
-}
-
-#
 # Check if we expect SAPI to be available.  Generally, registering with SAPI is
 # a hard requirement for the correct functioning of the system, but this
 # postinstall script can also be run during headnode setup; SAPI is not yet
@@ -327,8 +269,5 @@ if sapi_should_be_available; then
 else
     printf 'SAPI not yet available.  Skipping agent registration.\n' >&2
 fi
-
-add_config_agent_instance "${INSTANCE_UUID}"
-config_agent_restart
 
 exit 0
