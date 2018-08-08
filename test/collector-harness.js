@@ -235,7 +235,15 @@ function createMasterCollector(opts, callback) {
 
     mockCollector = new lib_master_collector({
         log: log,
-        adminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
+        adminUuid: '5e90c035-59ee-4024-8d99-b78314d17638',
+        metricsManager: {
+            createMetrics: function createMetrics() {},
+            collector: {
+                gauge: function gauge() {},
+                counter: function counter() {},
+                histogram: function histogram() {}
+            }
+        }
     });
 
     if (opts.mockData) {
@@ -252,7 +260,6 @@ function createMasterCollector(opts, callback) {
         mockCollector.reader = {
             read: mockKstatReader.bind(mockCollector)
         };
-
         mockCollector.mockData = opts.mockData;
         mockCollector.pluginOpts = opts.pluginOpts || {};
 
