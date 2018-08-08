@@ -19,7 +19,7 @@
     "libuuid": "0.2.1",
     "restify": "4.3.0",
     "sprintf-js": "1.0.3",
-    "triton-metrics": "0.1.1",
+    "triton-metrics": "^0.3.0",
     "vasync": "1.6.4",
     "verror": "1.10.0",
     "vmadm": "1.0.0"

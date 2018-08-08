@@ -27,7 +27,15 @@ var log = mod_bunyan.createLogger(
 
 var DEFAULT_OPTS = {
     log: log,
-    adminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
+    adminUuid: '5e90c035-59ee-4024-8d99-b78314d17638',
+    metricsManager: {
+        createMetrics: function createMetrics() {},
+        collector: {
+            gauge: function gauge() {},
+            counter: function counter() {},
+            histogram: function histogram() {}
+        }
+    }
 };
 
 test('create collector should work with valid opts', function _test(t) {
