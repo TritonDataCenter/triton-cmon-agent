@@ -1,7 +1,7 @@
 {
   "name": "cmon-agent",
   "description": "Triton Container Monitor Agent",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "author": "Joyent (joyent.com)",
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
     "restify": "4.3.0",
     "sprintf-js": "1.0.3",
     "triton-metrics": "0.1.1",
+    "triton-netconfig": "1.0.0",
     "vasync": "1.6.4",
     "verror": "1.10.0",
     "vmadm": "1.0.0"

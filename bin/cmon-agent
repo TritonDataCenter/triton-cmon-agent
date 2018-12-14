@@ -11,6 +11,7 @@
 var mod_assert = require('assert-plus');
 var mod_bunyan = require('bunyan');
 var mod_forkexec = require('forkexec');
+var mod_netconf = require('triton-netconfig');
 var mod_restify = require('restify');
 var mod_vasync = require('vasync');
 var fmt = require('util').format;
@@ -112,27 +113,13 @@ function main() {
 }
 
 function firstAdminIp(sysinfo) {
-    var interfaces = sysinfo['Network Interfaces'];
-    var admin_tag = 'admin';
+    var ip = mod_netconf.adminIpFromSysinfo(sysinfo);
 
-    if (sysinfo['Admin NIC Tag']) {
-        admin_tag = sysinfo['Admin NIC Tag'];
+    if (!ip) {
+        throw new Error(fmt('No admin NICs detected.'));
     }
 
-    for (var iface in interfaces) {
-        if (!interfaces.hasOwnProperty(iface)) {
-            continue;
-        }
-
-        var nic = interfaces[iface]['NIC Names'];
-        var isAdmin = nic.indexOf(admin_tag) !== -1;
-        if (isAdmin) {
-            var ip = interfaces[iface].ip4addr;
-            return ip;
-        }
-    }
-
-    throw new Error(fmt('No NICs with name "%s" detected.', admin_tag));
+    return ip;
 }
 
 main();

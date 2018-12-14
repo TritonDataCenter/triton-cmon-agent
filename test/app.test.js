@@ -28,7 +28,7 @@ var log = mod_bunyan.createLogger({
 
 var DEFAULT_CONFIG = {
     logLevel: 'fatal',
-    port: 9090, /* 9090 chosen to not conflict with a running cmon-agent */
+    port: 9990, /* 9990 chosen to not conflict with a running cmon-agent */
     ufdsAdminUuid: '5e90c035-59ee-4024-8d99-b78314d17638'
 };
 
