@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2018, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /* Test the Metric Agent endpoints */
@@ -73,7 +73,9 @@ test('get metrics returns expected metrics for first VM', function _test(t) {
             module: 'zones'
         })[1].data.zonename; // index 0 is GZ
 
-        collector.getMetrics(vm_uuid, function _get(err, str) {
+        collector.getMetrics({
+            vm_uuid: vm_uuid
+        }, function _get(err, str) {
             t.notOk(err, 'err should be undefined');
             t.equal(typeof (str), 'string');
             var metrics = str.split('\n');
@@ -116,12 +118,16 @@ test('get metrics fails when passed invalid VM uuid', function _test(t) {
     var collector = new lib_instrumenterCollector(DEFAULT_OPTS);
     collector.start(function _afterStarting() {
         t.throws(function _nonUuid() {
-            collector.getMetrics(42, function _noop() {});
+            collector.getMetrics({
+                vm_uuid: 42
+            }, function _noop() {});
         }, 'vm_uuid');
         t.doesNotThrow(function _notExist() {
             var bad_uuid = mod_libuuid.create();
 
-            collector.getMetrics(bad_uuid, function _noop(err, metrics) {
+            collector.getMetrics({
+                vm_uuid: bad_uuid
+            }, function _noop(err, metrics) {
                 t.ok(err, 'err is set');
                 t.equal(err.code, 'ENOTFOUND', 'error should be ENOTFOUND');
                 t.notOk(metrics, 'metrics is not set');

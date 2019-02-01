@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /*
@@ -64,6 +64,11 @@ var CLI_OPTIONS = [
         type: 'string',
         help: 'dump only the VM specified.',
         helpArg: 'VM_UUID'
+    },
+    {
+        names: ['isCore', 'c'],
+        type: 'bool',
+        help: 'indicates that the specified VM is a core Triton or Manta VM'
     }
 ];
 
@@ -112,6 +117,13 @@ function main() {
         process.exit(1);
     }
 
+    if (cli_opts.gz !== undefined && cli_opts.isCore !== undefined) {
+        console.error('%s: Fatal: cannot specify both of -G and -c',
+            CLI_NAME);
+        dumpHelp(cli_parser, console.error);
+        process.exit(1);
+    }
+
     if (cli_opts.gz === true) {
         config.target = 'gz';
     } else {
@@ -122,6 +134,11 @@ function main() {
         config.filename = cli_opts.file;
     } else {
         config.filename = '/dev/stdin';
+    }
+
+    config.isCore = false;
+    if (cli_opts.c === true) {
+        config.isCore = true;
     }
 
     processData(config, function _onData(err, data) {
@@ -143,6 +160,7 @@ function processData(config, callback) {
     mod_assert.object(config, 'config');
     mod_assert.string(config.filename, 'config.filename');
     mod_assert.string(config.target, 'config.target');
+    mod_assert.bool(config.isCore);
     mod_assert.func(callback, 'callback');
 
     mod_fs.readFile(config.filename, function _onRead(readErr, data) {
@@ -155,11 +173,13 @@ function processData(config, callback) {
 
         jsonObj = JSON.parse(data);
 
-        collector_harness.createCollector({
+        collector_harness.createMasterCollector({
             mockData: jsonObj
         }, function _collectorCb(collector) {
-            collector.getMetrics(config.target,
-                function _gotMetrics(err, metrics) {
+            collector.getMetrics({
+                vm_uuid: config.target,
+                isCoreZone: config.isCore
+            }, function _gotMetrics(err, metrics) {
 
                 if (err) {
                     callback(err);

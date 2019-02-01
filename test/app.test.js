@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2018, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /* Test the Metric Agent app */
@@ -19,6 +19,7 @@ var mod_restify = require('restify');
 
 var lib_app = require('../lib/app');
 var lib_common = require('../lib/common');
+var lib_endpoints_metrics = require('../lib/endpoints/metrics');
 
 var log = mod_bunyan.createLogger({
     level: 'fatal',
@@ -43,6 +44,22 @@ var DEFAULT_OPTS = {
 };
 
 var DEFAULT_ENDPOINT = 'http://' + DEFAULT_OPTS.ip + ':' + DEFAULT_CONFIG.port;
+
+/*
+ * Creates the required header for a cmon-agent getMetrics request, setting the
+ * isCoreZone value to the provided boolean.
+ */
+function createTestHeaders(isCoreZone) {
+    var headerObj = {
+        isCoreZone: isCoreZone
+    };
+    // Convert header object to base64 JSON string
+    var jsonStr = JSON.stringify(headerObj);
+    var headerStr = Buffer.from(jsonStr, 'utf8').toString('base64');
+    var headers = {};
+    headers[lib_endpoints_metrics.CMON_OPTS_HEADER] = headerStr;
+    return headers;
+}
 
 test('create app succeeds', function _test(t) {
     var app;
@@ -153,7 +170,10 @@ test('http get metrics for zone succeeds', function _test(t) {
         var app = new lib_app(DEFAULT_OPTS);
         app.start(function _start() {
             setTimeout(function _timeout() {
-                client.get(metrics_route, function _get(err, req, res, data) {
+                client.get({
+                    path: metrics_route,
+                    headers: createTestHeaders(false)
+                }, function _get(err, req, res, data) {
                     t.notOk(err, 'err is not set');
                     t.ok(data, 'data is set');
 
@@ -180,7 +200,10 @@ test('http get metrics for missing zone returns 404', function _test(t) {
     var app = new lib_app(DEFAULT_OPTS);
     app.start(function _start() {
         setTimeout(function _timeout() {
-            client.get(metrics_route, function _get(err, req, res, data) {
+            client.get({
+                path: metrics_route,
+                headers: createTestHeaders(false)
+            }, function _get(err, req, res, data) {
                 t.ok(err, 'err is set');
                 t.equal(err.statusCode, 404, 'error is 404');
                 t.ok(data);

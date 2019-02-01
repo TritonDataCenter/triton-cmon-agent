@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2018, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /* Test the collector/metrics pipeline using mocked system responses. */
@@ -67,7 +67,9 @@ test('collectors-common/time works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getGzTime(_, cb) {
-                    masterCollector.getMetrics('gz',
+                    masterCollector.getMetrics({
+                            vm_uuid: 'gz'
+                        },
                         function _gotMetricsCb(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
@@ -79,7 +81,9 @@ test('collectors-common/time works as expected', function _test(t) {
                         cb();
                     });
                 }, function getVmTime(_, cb) {
-                    masterCollector.getMetrics(vmUuid,
+                    masterCollector.getMetrics({
+                            vm_uuid: vmUuid
+                        },
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
@@ -91,7 +95,9 @@ test('collectors-common/time works as expected', function _test(t) {
                         cb();
                     });
                 }, function getInvalidVmTime(_, cb) {
-                    masterCollector.getMetrics(invalidVmUuid,
+                    masterCollector.getMetrics({
+                            vm_uuid: invalidVmUuid
+                        },
                         function _gotMetrics(err, metrics) {
 
                         t.ok(err, 'getMetrics should fail for VM');
@@ -477,7 +483,9 @@ test('collectors-gz/arcstats works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getGzArcstats(_, cb) {
-                    masterCollector.getMetrics('gz',
+                    masterCollector.getMetrics({
+                            vm_uuid: 'gz'
+                        },
                         function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
@@ -567,7 +575,9 @@ test('collectors-gz/cpu_info works as expected', function _test(t) {
             }
         }, mockData: mockData
     }, function _collectorCreatedCb(masterCollector) {
-        masterCollector.getMetrics('gz', function _gotMetrics(err, metrics) {
+        masterCollector.getMetrics({
+                vm_uuid: 'gz'
+            }, function _gotMetrics(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim().split('\n'),
@@ -901,9 +911,9 @@ test('collectors-vm/link works as expected w/ 2 vnics', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        '61c64afd-6c69-44b3-94fc-bcd17234e268',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '61c64afd-6c69-44b3-94fc-bcd17234e268'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1240,9 +1250,9 @@ test('collectors-vm/link works as expected w/ 1 vnic', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        'f0b7e8d8-8f76-46db-b292-6d8124212ea1',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: 'f0b7e8d8-8f76-46db-b292-6d8124212ea1'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1348,9 +1358,9 @@ test('collectors-vm/memcap works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        'b55cf19c-4898-4bd1-9169-b89b472d0621',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: 'b55cf19c-4898-4bd1-9169-b89b472d0621'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1509,9 +1519,9 @@ test('collectors-vm/tcp works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: 'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1581,9 +1591,9 @@ test('collectors-vm/zfs works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        '319cb666-4797-4387-83ed-56d865fd25f4',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1686,9 +1696,9 @@ test('collectors-vm/zone_misc works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        '319cb666-4797-4387-83ed-56d865fd25f4',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1811,9 +1821,9 @@ test('collectors-vm/zone_vfs works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        '319cb666-4797-4387-83ed-56d865fd25f4',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -1932,9 +1942,9 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: 'ddda3938-eca5-4a03-b7b2-2fe79b5b2dd1'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -2001,9 +2011,9 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getStats(_, cb) {
-                    masterCollector.getMetrics(
-                        '5831aa14-bcf3-4e72-a0b9-1847e80b08e7',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '5831aa14-bcf3-4e72-a0b9-1847e80b08e7'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -2036,7 +2046,6 @@ function _test(t) {
             }
         },
         'kstats': [],
-        'tritonMetadata': {isCore: true},
         'tritonMetrics': [
             '# HELP http_requests_completed count of requests completed\n' +
             '# TYPE http_requests_completed counter\n' +
@@ -2077,9 +2086,10 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getMetrics(_, cb) {
-                    masterCollector.getMetrics(
-                        '319cb666-4797-4387-83ed-56d865fd25f4',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4',
+                        isCoreZone: true
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -2113,7 +2123,6 @@ function _test(t) {
             }
         },
         'kstats': [],
-        'tritonMetadata': {isCore: true},
         'tritonMetrics': []
     };
 
@@ -2143,9 +2152,10 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getMetrics(_, cb) {
-                    masterCollector.getMetrics(
-                        '319cb666-4797-4387-83ed-56d865fd25f4',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4',
+                        isCoreZone: true
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -2179,7 +2189,6 @@ function _test(t) {
             }
         },
         'kstats': [],
-        'tritonMetadata': {isCore: false},
         'tritonMetrics': []
     };
 
@@ -2195,9 +2204,10 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getMetrics(_, cb) {
-                    masterCollector.getMetrics(
-                        '319cb666-4797-4387-83ed-56d865fd25f4',
-                        function _gotMetrics(err, metrics) {
+                    console.log('starting')
+                    masterCollector.getMetrics({
+                        vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for VM');
                         if (!err) {
@@ -2779,8 +2789,9 @@ test('collectors-gz/ntp works as expected', function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getNtpData(_, cb) {
-                    masterCollector.getMetrics('gz',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: 'gz'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
                         if (!err) {
@@ -2839,8 +2850,9 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getNtpData(_, cb) {
-                    masterCollector.getMetrics('gz',
-                        function _gotMetrics(err, metrics) {
+                    masterCollector.getMetrics({
+                        vm_uuid: 'gz'
+                    }, function _gotMetrics(err, metrics) {
 
                         t.ifError(err, 'getMetrics should succeed for GZ');
                         if (!err) {

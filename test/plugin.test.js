@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2018, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /* Test the backend for the plugin collector */
@@ -368,7 +368,9 @@ test('ensure we can get metrics from multiple plugins', function _test(t) {
             executor: fakePlugins
         }
     }, function _collectorCreatedCb(masterCollector) {
-        masterCollector.getMetrics('gz', function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: 'gz'
+        }, function _gotMetricsCb(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim()
@@ -436,7 +438,9 @@ test('ensure we can get multiple metrics from one plugin', function _test(t) {
             executor: fakePlugins
         }
     }, function _collectorCreatedCb(masterCollector) {
-        masterCollector.getMetrics('gz', function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: 'gz'
+        }, function _gotMetricsCb(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim()
@@ -547,7 +551,9 @@ test('too many plugins should cause drops', function _test(t) {
     }, function _collectorCreatedCb(masterCollector) {
         mod_vasync.forEachParallel({
             func: masterCollector.getMetrics.bind(masterCollector),
-            inputs: Object.keys(mockData.vms)
+            inputs: Object.keys(mockData.vms).map(function mapToObj(k) {
+                return { vm_uuid: k };
+            })
         }, function _parallelResults(err, results) {
             var idx;
             var metrics = '';
@@ -631,7 +637,9 @@ test('garbage output should be no problem', function _test(t) {
             executor: fakePlugins
         }
     }, function _collectorCreatedCb(masterCollector) {
-        masterCollector.getMetrics('gz', function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: 'gz'
+        }, function _gotMetricsCb(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim()
@@ -689,7 +697,9 @@ test('no output should be no problem', function _test(t) {
             executor: fakePlugins
         }
     }, function _collectorCreatedCb(masterCollector) {
-        masterCollector.getMetrics('gz', function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: 'gz'
+        }, function _gotMetricsCb(err, metrics) {
             t.ifError(err, 'getMetrics should succeed for GZ');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim()
@@ -763,8 +773,9 @@ test('when plugin times out, should be killed', function _test(t) {
         //
         //   sleep 86400
         //
-        masterCollector.getMetrics('86400',
-            function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: '86400'
+        }, function _gotMetricsCb(err, metrics) {
 
             t.ifError(err, 'getMetrics should succeed');
             if (!err) {
@@ -833,7 +844,9 @@ test('when plugin outputs too much, it should be killed', function _test(t) {
         //
         //   sleep 86400
         //
-        masterCollector.getMetrics('gz', function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: 'gz'
+        }, function _gotMetricsCb(err, metrics) {
             t.ifError(err, 'getMetrics should succeed');
             if (!err) {
                 t.deepEqual(normalizeTimers(metrics).trim()
@@ -894,7 +907,9 @@ test('test that ttl option in metric output works', function _test(t) {
             executor: fakePlugins
         }
     }, function _collectorCreatedCb(masterCollector) {
-        masterCollector.getMetrics('gz', function _gotMetricsCb(err, metrics) {
+        masterCollector.getMetrics({
+            vm_uuid: 'gz'
+        }, function _gotMetricsCb(err, metrics) {
             var cacheKey = 'collectors-common/plugin/decaying/global';
 
             t.ifError(err, 'getMetrics should succeed');
