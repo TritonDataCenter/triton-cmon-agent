@@ -1,5 +1,6 @@
 /node_modules
 /tmp
+/bits
 /build
 docs/*.json
 docs/*.html
@@ -9,3 +10,5 @@ cscope.out
 /npm-debug.log
 *.swp
 describe
+cmon-agent-*.tgz
+cmon-agent-*.manifest

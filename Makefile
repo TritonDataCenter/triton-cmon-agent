@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright 2018 Joyent, Inc.
+# Copyright (c) 2019, Joyent, Inc.
 #
 
 #
@@ -32,7 +32,6 @@ JS_FILES	:= $(shell find lib test bin -name '*.js') \
 	bin/cmon-agent bin/collector-collect bin/collector-dump
 JSSTYLE_FILES	= $(JS_FILES)
 JSSTYLE_FLAGS	= -o indent=4,doxygen,unparenthesized-return=0
-ESLINT		= ./node_modules/.bin/eslint
 ESLINT_FILES	= $(JS_FILES)
 
 # The next line breaks the build due to a variable that eng.git sed expander
@@ -47,14 +46,17 @@ NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
 endif
 
 # Included definitions
-include ./tools/mk/Makefile.defs
-include ./tools/mk/Makefile.node_prebuilt.defs
-include ./tools/mk/Makefile.smf.defs
+ENGBLD_REQUIRE := $(shell git submodule update --init deps/eng)
+include ./deps/eng/tools/mk/Makefile.defs
+TOP ?= $(error Unable to access eng.git submodule Makefiles.)
+
+include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
+include ./deps/eng/tools/mk/Makefile.smf.defs
 
 NAME :=	cmon-agent
 RELEASE_TARBALL :=	$(NAME)-$(STAMP).tgz
 RELEASE_MANIFEST :=	$(NAME)-$(STAMP).manifest
-RELSTAGEDIR :=		/tmp/$(STAMP)
+RELSTAGEDIR :=		/tmp/$(NAME)-$(STAMP)
 TAPE =		$(TOP)/node_modules/tape/bin/tape
 
 #
@@ -66,6 +68,8 @@ TAPE =		$(TOP)/node_modules/tape/bin/tape
 #
 NPM_ENV =		SDC_AGENT_SKIP_LIFECYCLE=yes
 RUN_NPM_INSTALL =	$(NPM_ENV) $(NPM) install
+
+CLEAN_FILES += $(NAME)-*.tgz $(NAME)-*.manifest
 
 #
 # Repo-specific targets
@@ -111,7 +115,7 @@ release: all deps $(SMF_MANIFESTS)
 	    $(RELSTAGEDIR)/$(NAME)/node/include \
 	    $(RELSTAGEDIR)/$(NAME)/node/share
 	uuid -v4 >$(RELSTAGEDIR)/cmon-agent/image_uuid
-	cd $(RELSTAGEDIR) && $(TAR) -zcf $(TOP)/$(RELEASE_TARBALL) *
+	cd $(RELSTAGEDIR) && $(TAR) -I pigz -cf $(TOP)/$(RELEASE_TARBALL) *
 	cat $(TOP)/manifest.tmpl | sed \
 	    -e "s/UUID/$$(cat $(RELSTAGEDIR)/cmon-agent/image_uuid)/" \
 	    -e "s/NAME/$$(json name < $(TOP)/package.json)/" \
@@ -126,26 +130,11 @@ release: all deps $(SMF_MANIFESTS)
 
 .PHONY: publish
 publish: release
-	@if [[ -z "$(BITS_DIR)" ]]; then \
-	    @echo "error: 'BITS_DIR' must be set for 'publish' target"; \
-	    exit 1; \
-	fi
-	mkdir -p $(BITS_DIR)/$(NAME)
-	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/$(NAME)/$(RELEASE_TARBALL)
-	cp $(TOP)/$(RELEASE_MANIFEST) $(BITS_DIR)/$(NAME)/$(RELEASE_MANIFEST)
+	mkdir -p $(ENGBLD_BITS_DIR)/$(NAME)
+	cp $(TOP)/$(RELEASE_TARBALL) $(ENGBLD_BITS_DIR)/$(NAME)/$(RELEASE_TARBALL)
+	cp $(TOP)/$(RELEASE_MANIFEST) $(ENGBLD_BITS_DIR)/$(NAME)/$(RELEASE_MANIFEST)
 
-
-$(ESLINT):
-	npm install
-
-.PHONY: check-eslint
-check-eslint:: $(ESLINT)
-	$(ESLINT) $(ESLINT_FILES)
-
-check:: check-eslint
-
-
-include ./tools/mk/Makefile.deps
-include ./tools/mk/Makefile.node_prebuilt.targ
-include ./tools/mk/Makefile.smf.targ
-include ./tools/mk/Makefile.targ
+include ./deps/eng/tools/mk/Makefile.deps
+include ./deps/eng/tools/mk/Makefile.node_prebuilt.targ
+include ./deps/eng/tools/mk/Makefile.smf.targ
+include ./deps/eng/tools/mk/Makefile.targ
