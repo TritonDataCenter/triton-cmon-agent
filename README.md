@@ -22,6 +22,9 @@ compute node it resides on.
 
 ## Test
 
+Tests must be run in the global zone of a machine with at least one non-global
+zone.
+
 ```
 make test
 ```

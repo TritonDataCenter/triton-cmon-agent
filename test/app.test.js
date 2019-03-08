@@ -222,6 +222,32 @@ test('http get metrics for missing zone returns 404', function _test(t) {
     });
 });
 
+test('http get global zone metrics succeeds', function _test(t) {
+    t.plan(2);
+
+    var metrics_route = '/v1/gz/metrics';
+    var client = mod_restify.createStringClient({ url: DEFAULT_ENDPOINT });
+
+    var app = new lib_app(DEFAULT_OPTS);
+    app.start(function _start() {
+        setTimeout(function _timeout() {
+            client.get({
+                path: metrics_route,
+                headers: null /* Need to support client not setting headers */
+            }, function _get(err, req, res, data) {
+                t.notOk(err, 'err is not set');
+                t.ok(data, 'data is set');
+
+                client.close();
+
+                app.close(function _close() {
+                    t.end();
+                });
+            });
+        }, 2000);
+    });
+});
+
 /*
  * Note: refresh no longer actually does anything. This test is left here only
  * because refresh is in the v1 API and we want to ensure we're still matching
