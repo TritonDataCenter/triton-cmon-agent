@@ -1552,8 +1552,17 @@ test('collectors-vm/zfs works as expected', function _test(t) {
             '319cb666-4797-4387-83ed-56d865fd25f4': {
                 'instance': 14,
                 'zfs': {
-                    'avail': 18244200960,
-                    'used': 3231139328
+                    'available': 18244200960,
+                    'used': 3231139328,
+                    'logicalused': 32311393280,
+                    'recordsize': 131072,
+                    'quota': 10737418240,
+                    'compressratio': 1.04,
+                    'refcompressratio': 1.03,
+                    'referenced': 118571008,
+                    'logicalreferenced': 58254612480,
+                    'usedbydataset': 378124608,
+                    'usedbysnapshots': 154752
                 }
             }
         }
@@ -1576,7 +1585,34 @@ test('collectors-vm/zfs works as expected', function _test(t) {
         'zfs_available 18244200960',
         '# HELP zfs_used zfs space used in bytes',
         '# TYPE zfs_used gauge',
-        'zfs_used 3231139328'
+        'zfs_used 3231139328',
+        '# HELP zfs_logicalused zfs space logically used in bytes',
+        '# TYPE zfs_logicalused gauge',
+        'zfs_logicalused 32311393280',
+        '# HELP zfs_recordsize suggested zfs data block size in bytes',
+        '# TYPE zfs_recordsize gauge',
+        'zfs_recordsize 131072',
+        '# HELP zfs_quota zfs dataset quota in bytes',
+        '# TYPE zfs_quota gauge',
+        'zfs_quota 10737418240',
+        '# HELP zfs_compressratio zfs compression ratio achieved for the used property',
+        '# TYPE zfs_compressratio gauge',
+        'zfs_compressratio 1.04',
+        '# HELP zfs_refcompressratio zfs compression ratio achieved for the referenced property',
+        '# TYPE zfs_refcompressratio gauge',
+        'zfs_refcompressratio 1.03',
+        '# HELP zfs_referenced zfs data accessible by dataset in bytes',
+        '# TYPE zfs_referenced gauge',
+        'zfs_referenced 118571008',
+        '# HELP zfs_logicalreferenced zfs data logically accessible by dataset in bytes',
+        '# TYPE zfs_logicalreferenced gauge',
+        'zfs_logicalreferenced 58254612480',
+        '# HELP zfs_usedbydataset zfs data used by the dataset itself in bytes',
+        '# TYPE zfs_usedbydataset gauge',
+        'zfs_usedbydataset 378124608',
+        '# HELP zfs_usedbysnapshots zfs data used by snapshots in bytes',
+        '# TYPE zfs_usedbysnapshots gauge',
+        'zfs_usedbysnapshots 154752'
     ];
     /* END JSSTYLED */
     /* eslint-disable */

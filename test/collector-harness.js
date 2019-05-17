@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2018, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /* Test the Metric Agent endpoints */
@@ -82,10 +82,28 @@ function mockZfsUsage(vm_uuid, callback) {
         'self.mockData.vms.' + vm_uuid);
     mod_assert.object(self.mockData.vms[vm_uuid].zfs,
         'self.mockData.vms.' + vm_uuid + '.zfs');
-    mod_assert.number(self.mockData.vms[vm_uuid].zfs.avail,
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.available,
         'self.mockData.vms.' + vm_uuid + '.zfs.avail');
     mod_assert.number(self.mockData.vms[vm_uuid].zfs.used,
         'self.mockData.vms.' + vm_uuid + '.zfs.used');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.logicalused,
+        'self.mockData.vms.' + vm_uuid + '.zfs.logicalused');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.recordsize,
+        'self.mockData.vms.' + vm_uuid + '.zfs.recordsize');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.quota,
+        'self.mockData.vms.' + vm_uuid + '.zfs.quota');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.compressratio,
+        'self.mockData.vms.' + vm_uuid + '.zfs.compressratio');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.refcompressratio,
+        'self.mockData.vms.' + vm_uuid + '.zfs.refcompressratio');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.referenced,
+        'self.mockData.vms.' + vm_uuid + '.zfs.referenced');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.logicalreferenced,
+        'self.mockData.vms.' + vm_uuid + '.zfs.logicalreferenced');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.usedbydataset,
+        'self.mockData.vms.' + vm_uuid + '.zfs.usedbydataset');
+    mod_assert.number(self.mockData.vms[vm_uuid].zfs.usedbysnapshots,
+        'self.mockData.vms.' + vm_uuid + '.zfs.usedbysnapshots');
 
     callback(null, self.mockData.vms[vm_uuid].zfs);
 }
