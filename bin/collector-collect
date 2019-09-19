@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -36,7 +36,7 @@
 var mod_assert = require('assert-plus');
 var mod_bunyan = require('bunyan');
 var mod_dashdash = require('dashdash');
-var mod_jsprim = require('jsprim');
+var mod_forkexec = require('forkexec');
 var mod_vasync = require('vasync');
 
 var kstat_common = require('../lib/instrumenter/lib/kstat-common');
@@ -90,10 +90,12 @@ function dumpHelp(parser, outputFn) {
 function main() {
     var cli_opts;
     var cli_parser = mod_dashdash.createParser({options: CLI_OPTIONS});
+
     var config = {
         include_gz: false,
         include_vms: false,
-        limit_vms: []
+        adminUuid: '',
+        vms: []
     };
 
     try {
@@ -135,13 +137,29 @@ function main() {
         }
 
         // if any of these aren't actual VM UUIDs, we'll fail to load those
-        config.limit_vms = cli_opts._args;
+        config.vms = cli_opts._args;
     }
 
-    collectData(config, function _onData(err, data) {
-        mod_assert.ifError(err, 'failed to load data');
+    mod_forkexec.forkExecWait({
+        argv: ['/usr/bin/bash', '/lib/sdc/config.sh', '-json']
+    }, function _onForkWaited(err1, info) {
 
-        console.log(JSON.stringify(data, null, 4));
+        if (err1) {
+            console.error('could not run /lib/sdc/config.sh: ' + err1);
+            return;
+        }
+
+        try {
+            config.adminUuid = JSON.parse(info.stdout).ufds_admin_uuid;
+        } catch (err2) {
+            console.error('could not parse sdc config: ' + err2);
+            return;
+        }
+
+        collectData(config, function _onData(err, data) {
+            mod_assert.ifError(err, 'failed to load data');
+            console.log(JSON.stringify(data, null, 4));
+        });
     });
 }
 
@@ -241,57 +259,47 @@ function loadKstats(vms, kstats, vmKstatRead, gzKstatRead, reader, callback) {
 }
 
 function collectData(config, callback) {
-    var dummyCollector = new lib_instrumenterCollector({ log: log });
+    var opts = {
+        log: log,
+        adminUuid: config.adminUuid
+    };
+
+    var dummyCollector = new lib_instrumenterCollector(opts);
 
     dummyCollector.start(function _onStart() {
-        var gzKstatRead = [];
         var kstats = [];
         var ntpData = {};
         var timestamp = Date.now();
         var vms = {};
         var vmKstatRead = [];
-
-        // get *all* zones
-        if (config.include_vms) {
-            vms = mod_jsprim.deepCopy(dummyCollector.zones);
-        }
+        var gzKstatRead = [];
 
         mod_vasync.pipeline({
             funcs: [
-                function _filterVms(_, cb) {
-                    var vmIdx;
-                    var vmKeys;
+                function _getInstancesIds(_, cb) {
+                    vms = config.vms.reduce(function _accumulator(acc, vm) {
+                        acc[vm] = {};
+                        return acc;
+                    }, {});
 
-                    // Cut down to just those VMs that were requested.
-                    if (!config.include_vms || config.limit_vms.length === 0) {
-                        cb();
-                        return;
-                    }
+                    mod_vasync.forEachParallel({
+                        func: function _getVmInfo(vmUuid, cb1) {
+                            dummyCollector.getZoneInfo(vmUuid,
+                                function _gotVmInfo(err, vmInfo) {
+                                if (err) {
+                                    cb1(err);
+                                    return;
+                                }
+                                vms[vmUuid].instance = vmInfo.instanceId;
+                                cb1();
+                            });
+                        },
+                        inputs: Object.keys(vms)
+                    }, function _gotAllVmsInfo(err, __) {
+                        cb(err);
+                    });
 
-                    // First pass, remove any that aren't in limit_vms.
-                    vmKeys = Object.keys(vms);
-                    for (vmIdx = 0; vmIdx < vmKeys.length; vmIdx++) {
-                        if (config.limit_vms.indexOf(vmKeys[vmIdx]) === -1) {
-                            delete vms[vmKeys[vmIdx]];
-                        }
-                    }
-
-                    // At this point anything in vms is also in limit_vms, so if
-                    // they're not the same length, some are missing.
-                    if (Object.keys(vms).length !== config.limit_vms.length) {
-                        cb(new Error('Some requested VMs not found. ' +
-                            'Expected: ' + JSON.stringify(config.limit_vms) +
-                             ' ' +
-                            'Got: ' + JSON.stringify(Object.keys(vms))));
-                        return;
-                    }
-                    cb();
                 }, function _addZfsUsage(_, cb) {
-                    if (!config.include_vms) {
-                        cb();
-                        return;
-                    }
-
                     addZfsUsage(dummyCollector, vms, cb);
                 }, function _discoverKstats(_, cb) {
                     if (config.include_vms) {
