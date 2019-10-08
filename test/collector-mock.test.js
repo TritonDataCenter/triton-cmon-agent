@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2019, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /* Test the collector/metrics pipeline using mocked system responses. */
@@ -2240,7 +2240,7 @@ function _test(t) {
         mod_vasync.pipeline({
             funcs: [
                 function getMetrics(_, cb) {
-                    console.log('starting')
+                    console.log('starting');
                     masterCollector.getMetrics({
                         vm_uuid: '319cb666-4797-4387-83ed-56d865fd25f4'
                     }, function _gotMetrics(err, metrics) {

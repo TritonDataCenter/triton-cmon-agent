@@ -18,6 +18,10 @@
 	"func-names": [2, "always"],
         "strict": [ "error", "global" ],
         "consistent-return": "off",
-        "no-loop-func": "off"
+        "no-loop-func": "off",
+        "padded-blocks": "off",
+        "no-multi-spaces": "off",
+        "no-useless-escape": "off",
+        "callback-return": "off"
     }
 }
