@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright (c) 2019, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 #
@@ -50,7 +50,14 @@ ENGBLD_REQUIRE := $(shell git submodule update --init deps/eng)
 include ./deps/eng/tools/mk/Makefile.defs
 TOP ?= $(error Unable to access eng.git submodule Makefiles.)
 
-include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
+ifeq ($(shell uname -s),SunOS)
+	include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
+else
+	NPM=npm
+	NODE=node
+	NPM_EXEC=$(shell which npm)
+	NODE_EXEC=$(shell which node)
+endif
 include ./deps/eng/tools/mk/Makefile.smf.defs
 
 NAME :=	cmon-agent
@@ -135,6 +142,8 @@ publish: release
 	cp $(TOP)/$(RELEASE_MANIFEST) $(ENGBLD_BITS_DIR)/$(NAME)/$(RELEASE_MANIFEST)
 
 include ./deps/eng/tools/mk/Makefile.deps
-include ./deps/eng/tools/mk/Makefile.node_prebuilt.targ
+ifeq ($(shell uname -s),SunOS)
+    include ./deps/eng/tools/mk/Makefile.node_prebuilt.targ
+endif
 include ./deps/eng/tools/mk/Makefile.smf.targ
 include ./deps/eng/tools/mk/Makefile.targ
