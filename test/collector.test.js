@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2019, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /* Test the Metric Agent endpoints */
@@ -100,7 +100,7 @@ test('get metrics returns expected metrics for first VM', function _test(t) {
                     'metric name contains only name/label characters, ' +
                     'got: ' + metric_name);
                 /* END JSSTYLED */
-                t.ok(Number.isFinite(parseInt(metric_value)) ||
+                t.ok(Number.isFinite(parseInt(metric_value, 10)) ||
                     Number.isFinite(parseFloat(metric_value)),
                     'metric value is finite');
             }
