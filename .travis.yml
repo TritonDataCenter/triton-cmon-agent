@@ -1,12 +1,11 @@
 git:
   depth: false
-language: node_js
+language: generic
 node_js:
   - "6"  
   - "4" 
 before_install:
   - "sudo apt-get install -y libxml2-utils"
   - "git checkout ${TRAVIS_BRANCH}"
-install: []
 script:
   - "make check"
