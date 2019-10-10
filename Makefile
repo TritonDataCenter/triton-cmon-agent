@@ -26,6 +26,8 @@
 # Files
 #
 
+SHELL :=/bin/bash
+
 CLEAN_FILES += ./node_modules
 DOC_FILES	 = index.md
 JS_FILES	:= $(shell find lib test bin -name '*.js') \
