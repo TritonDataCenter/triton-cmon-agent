@@ -23,7 +23,8 @@
     "triton-netconfig": "1.0.0",
     "vasync": "1.6.4",
     "verror": "1.10.0",
-    "vmadm": "1.0.0"
+    "vmadm": "1.0.0",
+    "zfs2": "0.0.1"
   },
   "devDependencies": {
     "tape": "4.6.3",
