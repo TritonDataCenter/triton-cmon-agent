@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /* Test the Metric Agent endpoints */
@@ -96,8 +96,8 @@ test('get metrics returns expected metrics for first VM', function _test(t) {
                 var metric_name = metric_parts[0];
                 var metric_value = metric_parts[1];
                 /* BEGIN JSSTYLED */
-                t.ok(/^[a-zA-Z0-9_{}=\"\"]+$/.test(metric_name),
-                    'metric name contains only name/label characters, ' +
+                t.ok(/^[a-zA-Z0-9_{}=\"\"\-,]+$/.test(metric_name),
+                    'metric name contains only name/labels characters, ' +
                     'got: ' + metric_name);
                 /* END JSSTYLED */
                 t.ok(Number.isFinite(parseInt(metric_value, 10)) ||
