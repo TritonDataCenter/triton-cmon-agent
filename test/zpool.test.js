@@ -43,7 +43,7 @@ test('Validate zpool metrics', function _collectZpoolMetrics(t) {
             return;
         }
 
-        var valid_metric_types = ['counter', 'gauge', 'histogram'];
+        var valid_metric_types = ['counter', 'gauge'];
         var valid_metric_keys = [
             'metaslab_group_loads', 'metaslab_group_unloads',
             'zpool_allocated_bytes', 'zpool_fragmentation_percent',
