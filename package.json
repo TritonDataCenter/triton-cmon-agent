@@ -28,7 +28,8 @@
   "devDependencies": {
     "tape": "4.6.3",
     "eslint": "4.18.2",
-    "eslint-plugin-joyent": "2.1.0"
+    "eslint-plugin-joyent": "2.1.0",
+    "esquery": "1.1.0"
   },
   "sdcDependencies": {
     "config-agent": "1.5.0"
