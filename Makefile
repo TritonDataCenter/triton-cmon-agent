@@ -6,6 +6,7 @@
 
 #
 # Copyright 2019 Joyent, Inc.
+# Copyright 2022 MNX Cloud, Inc.
 #
 
 #
@@ -111,10 +112,11 @@ release: all deps $(SMF_MANIFESTS)
 	    $(TOP)/lib \
 	    $(TOP)/node_modules \
 	    $(TOP)/npm \
-	    $(TOP)/package.json \
 	    $(TOP)/smf \
 	    $(TOP)/test \
 	    $(RELSTAGEDIR)/$(NAME)
+	json -f $(TOP)/package.json -e 'this.version += "-$(STAMP)"' \
+	    > $(RELSTAGEDIR)/$(NAME)/package.json
 	# Trim node
 	rm -rf \
 	    $(RELSTAGEDIR)/$(NAME)/node/bin/npm \

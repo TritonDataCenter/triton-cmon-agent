@@ -6,6 +6,7 @@
 
 <!--
     Copyright (c) 2017, Joyent, Inc.
+    Copyright 2022 MNX Cloud, Inc.
 -->
 
 # Triton Container Monitor Agent (cmon-agent)
@@ -39,7 +40,7 @@ make release
 ## Documentation
 
 For an overview of the Triton Container Monitor solution, please see
-[RFD 27](https://github.com/joyent/rfd/blob/master/rfd/0027/README.md#).
+[RFD 27](https://github.com/TritonDataCenter/rfd/blob/master/rfd/0027/README.md#).
 
 For documentation specific to cmon-agent, please see
 [docs/README.md](docs/README.md).
