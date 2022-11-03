@@ -1,7 +1,7 @@
 # cmon-agent
 
 The cmon-agent runs on all Triton nodes and is responsible for responding to
-[CMON](https://github.com/joyent/triton-cmon) requests for individual container
+[CMON](https://github.com/TritonDataCenter/triton-cmon) requests for individual container
 metrics.
 
 # The cmon-agent exposes the following HTTP API:
