@@ -1,8 +1,8 @@
 {
   "name": "cmon-agent",
   "description": "Triton Container Monitor Agent",
-  "version": "1.17.1",
-  "author": "Joyent (joyent.com)",
+  "version": "1.17.2",
+  "author": "MNX Cloud (mnx.io)",
   "repository": {
     "type": "git",
     "url": "https://github.com/TritonDataCenter/triton-cmon-agent.git"
