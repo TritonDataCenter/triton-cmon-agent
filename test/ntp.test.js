@@ -300,6 +300,48 @@ test('test ntp output parser', function _test(t) {
             "delay": 53.543,
             "offset": -6.985,
             "jitter": 2.267
+          },
+          "1": {
+            "assid": 1,
+            "delay": 0,
+            "jitter": 0,
+            "offset": 0,
+            "poll": 64,
+            "reach": 0,
+            "refid": ".LOCL.",
+            "remote": "LOCAL(0)",
+            "st": 14,
+            "state": "invalid",
+            "t": "l",
+            "when": 10
+          },
+          "13151": {
+            "assid": 13151,
+            "delay": 70.928,
+            "jitter": 1.224,
+            "offset": -4.351,
+            "poll": 1024,
+            "reach": 255,
+            "refid": "LOCAL(1)",
+            "remote": "216.218.254.202",
+            "st": 5,
+            "state": "pruned",
+            "t": "u",
+            "when": 646
+          },
+          "40296": {
+            "assid": 40296,
+            "delay": 23.646,
+            "jitter": 1.018,
+            "offset": 0.218,
+            "poll": 16,
+            "reach": 1,
+            "refid": "c689ca20",
+            "remote": "2001:470:0:643:",
+            "st": 3,
+            "state": "candidate",
+            "t": "u",
+            "when": 2
           }
         },
         "syspeer": {
