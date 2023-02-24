@@ -6,6 +6,7 @@
 
 /*
  * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2023 MNX Cloud, Inc.
  */
 
 /* Test the backend for the ntp collector */
@@ -88,7 +89,10 @@ test('test ntp output parser', function _test(t) {
         '*198.58.110.84   d8dafeca 33560   2 u  673 1024  377   44.348    0.176   2.328',
         '-96.226.123.196  808a8dac 33562   2 u  815 1024  377   41.150    7.272   8.577',
         '-199.223.248.101 d133a1ee 33566   2 u  279 1024  377   65.716    6.068   6.341',
-        '+216.229.0.49    808a8dac 33567   2 u 1046 1024  377   53.543   -6.985   2.267'
+        '+216.229.0.49    808a8dac 33567   2 u 1046 1024  377   53.543   -6.985   2.267',
+        '-216.218.254.202 LOCAL(1) 13151   5 u  646 1024  377   70.928   -4.351   1.224',
+        ' LOCAL(0)        .LOCL.       1  14 l   10   64    0    0.000    0.000   0.000',
+        '+2001:470:0:643: c689ca20 40296   3 u    2   16    1   23.646    0.218   1.018'
     ].join('\n');
     var extraData = [
         'time since reset:       2767601',
@@ -296,6 +300,48 @@ test('test ntp output parser', function _test(t) {
             "delay": 53.543,
             "offset": -6.985,
             "jitter": 2.267
+          },
+          "1": {
+            "assid": 1,
+            "delay": 0,
+            "jitter": 0,
+            "offset": 0,
+            "poll": 64,
+            "reach": 0,
+            "refid": ".LOCL.",
+            "remote": "LOCAL(0)",
+            "st": 14,
+            "state": "invalid",
+            "t": "l",
+            "when": 10
+          },
+          "13151": {
+            "assid": 13151,
+            "delay": 70.928,
+            "jitter": 1.224,
+            "offset": -4.351,
+            "poll": 1024,
+            "reach": 255,
+            "refid": "LOCAL(1)",
+            "remote": "216.218.254.202",
+            "st": 5,
+            "state": "pruned",
+            "t": "u",
+            "when": 646
+          },
+          "40296": {
+            "assid": 40296,
+            "delay": 23.646,
+            "jitter": 1.018,
+            "offset": 0.218,
+            "poll": 16,
+            "reach": 1,
+            "refid": "c689ca20",
+            "remote": "2001:470:0:643:",
+            "st": 3,
+            "state": "candidate",
+            "t": "u",
+            "when": 2
           }
         },
         "syspeer": {
