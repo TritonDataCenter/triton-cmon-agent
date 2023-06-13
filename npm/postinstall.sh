@@ -7,10 +7,16 @@
 
 #
 # Copyright 2018 Joyent, Inc.
+# Copyright 2023 MNX Cloud, Inc.
 #
 
 if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
     printf 'Running during package build; skipping lifecycle script.\n' >&2
+    exit 0
+fi
+
+if [[ $(uname -s) != "SunOS" ]]; then
+    echo "error: this postinstall is only supported on SunOS"
     exit 0
 fi
 
