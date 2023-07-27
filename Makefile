@@ -6,7 +6,7 @@
 
 #
 # Copyright 2019 Joyent, Inc.
-# Copyright 2022 MNX Cloud, Inc.
+# Copyright 2023 MNX Cloud, Inc.
 #
 
 #
@@ -33,7 +33,9 @@ JS_FILES	:= $(shell find lib test bin -name '*.js') \
 	bin/cmon-agent bin/collector-collect bin/collector-dump
 JSSTYLE_FILES	= $(JS_FILES)
 JSSTYLE_FLAGS	= -o indent=4,doxygen,unparenthesized-return=0
-ESLINT_FILES	= $(JS_FILES)
+
+# Re-enable when updated to Node v6
+# ESLINT_FILES	= $(JS_FILES)
 
 # The next line breaks the build due to a variable that eng.git sed expander
 # doesn't know about (@@ENABLED@@)
