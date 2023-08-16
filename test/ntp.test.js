@@ -352,7 +352,7 @@ test('test ntp output parser', function _test(t) {
             "jitter": 5.219,
             "offset": -4.953,
             "poll": 1024,
-            "reach": 377,
+            "reach": 255,
             "refid": "GPS_NMEA(0)",
             "remote": "99.119.214.210",
             "st": 2,
