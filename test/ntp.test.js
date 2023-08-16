@@ -144,6 +144,7 @@ test('test ntp output parser', function _test(t) {
         'root dispersion:    46.952',
         'reference ID:       216.229.0.49',
         'reference time:     dd9e1c1e.67c8d279  Fri, Oct 27 2017 20:57:02.405',
+        'reference time:     (no time)',
         'system jitter:      3.818756',
         'clock jitter:       2.850',
         'clock wander:       0.004',
@@ -344,6 +345,20 @@ test('test ntp output parser', function _test(t) {
             "state": "candidate",
             "t": "u",
             "when": 2
+          },
+          "12018": {
+            "assid": 12018,
+            "delay": 75.716,
+            "jitter": 5.219,
+            "offset": -4.953,
+            "poll": 1024,
+            "reach": 377,
+            "refid": "GPS_NMEA(0)",
+            "remote": "99.119.214.210",
+            "st": 2,
+            "state": "pruned",
+            "t": "u",
+            "when": 972
           }
         },
         "syspeer": {

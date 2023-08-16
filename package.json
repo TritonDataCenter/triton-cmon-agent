@@ -1,7 +1,7 @@
 {
   "name": "cmon-agent",
   "description": "Triton Container Monitor Agent",
-  "version": "1.17.2",
+  "version": "1.17.3",
   "author": "MNX Cloud (mnx.io)",
   "repository": {
     "type": "git",
