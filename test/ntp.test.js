@@ -92,6 +92,8 @@ test('test ntp output parser', function _test(t) {
         '+216.229.0.49    808a8dac 33567   2 u 1046 1024  377   53.543   -6.985   2.267',
         '-216.218.254.202 LOCAL(1) 13151   5 u  646 1024  377   70.928   -4.351   1.224',
         ' LOCAL(0)        .LOCL.       1  14 l   10   64    0    0.000    0.000   0.000',
+        // Ugh, yes, ntpq will sometimes smash two columns together.
+        '-99.119.214.210  GPS_NMEA(0)12018   2 u  972 1024  377   75.716   -4.953   5.219',
         '+2001:470:0:643: c689ca20 40296   3 u    2   16    1   23.646    0.218   1.018'
     ].join('\n');
     var extraData = [
