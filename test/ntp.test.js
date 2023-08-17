@@ -92,6 +92,8 @@ test('test ntp output parser', function _test(t) {
         '+216.229.0.49    808a8dac 33567   2 u 1046 1024  377   53.543   -6.985   2.267',
         '-216.218.254.202 LOCAL(1) 13151   5 u  646 1024  377   70.928   -4.351   1.224',
         ' LOCAL(0)        .LOCL.       1  14 l   10   64    0    0.000    0.000   0.000',
+        // Ugh, yes, ntpq will sometimes smash two columns together.
+        '-99.119.214.210  GPS_NMEA(0)12018   2 u  972 1024  377   75.716   -4.953   5.219',
         '+2001:470:0:643: c689ca20 40296   3 u    2   16    1   23.646    0.218   1.018'
     ].join('\n');
     var extraData = [
@@ -142,6 +144,7 @@ test('test ntp output parser', function _test(t) {
         'root dispersion:    46.952',
         'reference ID:       216.229.0.49',
         'reference time:     dd9e1c1e.67c8d279  Fri, Oct 27 2017 20:57:02.405',
+        'reference time:     (no time)',
         'system jitter:      3.818756',
         'clock jitter:       2.850',
         'clock wander:       0.004',
@@ -342,6 +345,20 @@ test('test ntp output parser', function _test(t) {
             "state": "candidate",
             "t": "u",
             "when": 2
+          },
+          "12018": {
+            "assid": 12018,
+            "delay": 75.716,
+            "jitter": 5.219,
+            "offset": -4.953,
+            "poll": 1024,
+            "reach": 255,
+            "refid": "GPS_NMEA(0)",
+            "remote": "99.119.214.210",
+            "st": 2,
+            "state": "pruned",
+            "t": "u",
+            "when": 972
           }
         },
         "syspeer": {
