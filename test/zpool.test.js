@@ -10,7 +10,7 @@
 
 'use strict';
 
-var mod_kstat = require('kstat');
+var mod_kstat = require('bindings')('kstat');
 var mod_bunyan = require('bunyan');
 var zpoolGZCollector = require('../lib/instrumenter/collectors-gz/zpool.js');
 
