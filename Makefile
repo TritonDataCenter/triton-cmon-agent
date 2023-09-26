@@ -87,6 +87,7 @@ CLEAN_FILES += $(NAME)-*.tgz $(NAME)-*.manifest
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS)
 	$(RUN_NPM_INSTALL)
+	ln -s node_modules/kstat/build build
 
 $(TAPE): | $(NPM_EXEC)
 	$(RUN_NPM_INSTALL)
