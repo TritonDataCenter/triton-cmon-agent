@@ -42,10 +42,10 @@ JSSTYLE_FLAGS	= -o indent=4,doxygen,unparenthesized-return=0
 # SMF_MANIFESTS_IN = smf/manifests/cmon-agent.xml.in
 
 # Should be the same version as the platform's /usr/node/bin/node.
-NODE_PREBUILT_VERSION =	v6.17.1
+NODE_PREBUILT_VERSION =	v4.9.0
 NODE_PREBUILT_TAG =	gz
 ifeq ($(shell uname -s),SunOS)
-NODE_PREBUILT_IMAGE =	5417ab20-3156-11ea-8b19-2b66f5e7a439
+NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
 endif
 
 # Included definitions
@@ -117,7 +117,6 @@ release: all deps $(SMF_MANIFESTS)
 	    $(TOP)/smf \
 	    $(TOP)/test \
 	    $(RELSTAGEDIR)/$(NAME)
-	ln -s node_modules/kstat/build $(RELSTAGEDIR)/$(NAME)
 	json -f $(TOP)/package.json -e 'this.version += "-$(STAMP)"' \
 	    > $(RELSTAGEDIR)/$(NAME)/package.json
 	# Trim node
