@@ -144,7 +144,6 @@ test('test ntp output parser', function _test(t) {
         'root dispersion:    46.952',
         'reference ID:       216.229.0.49',
         'reference time:     dd9e1c1e.67c8d279  Fri, Oct 27 2017 20:57:02.405',
-        'reference time:     (no time)',
         'system jitter:      3.818756',
         'clock jitter:       2.850',
         'clock wander:       0.004',
