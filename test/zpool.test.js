@@ -6,7 +6,6 @@
 
 /*
  * Copyright 2020 Joyent, Inc.
- * Copyright 2024 MNX Cloud, Inc.
  */
 
 'use strict';
