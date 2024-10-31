@@ -1,7 +1,7 @@
 {
   "name": "cmon-agent",
   "description": "Triton Container Monitor Agent",
-  "version": "1.18.1",
+  "version": "1.18.2",
   "author": "MNX Cloud (mnx.io)",
   "repository": {
     "type": "git",
@@ -16,7 +16,7 @@
     "dashdash": "1.14.1",
     "forkexec": "1.1.0",
     "jsprim": "1.4.1",
-    "kstat": "1.1.1",
+    "kstat": "https://github.com/TritonDataCenter/node-kstat.git#22adcc3d5b5f51d33637c89568685dbcb188e7eb",
     "libuuid": "0.2.1",
     "restify": "4.3.0",
     "sprintf-js": "1.0.3",
