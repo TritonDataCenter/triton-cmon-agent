@@ -16,7 +16,7 @@
     "dashdash": "1.14.1",
     "forkexec": "1.1.0",
     "jsprim": "1.4.1",
-    "kstat": "https://github.com/TritonDataCenter/node-kstat.git#22adcc3d5b5f51d33637c89568685dbcb188e7eb",
+    "kstat": "https://github.com/TritonDataCenter/node-kstat.git#f3c939cefa1eece7d8f7b2e7c13e43f15ad0d1da",
     "libuuid": "0.2.1",
     "restify": "4.3.0",
     "sprintf-js": "1.0.3",
